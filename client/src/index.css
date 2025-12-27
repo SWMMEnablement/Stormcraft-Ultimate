@@ -36,7 +36,7 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
   --font-sans: 'VT323', monospace;
-  --font-display: 'Press Start 2P', cursive;
+  --font-display: 'VT323', monospace;
 }
 
 :root {
@@ -113,7 +113,7 @@
 
 @layer utilities {
   .font-minecraft {
-    font-family: 'Press Start 2P', cursive;
+    font-family: var(--font-sans);
   }
   
   .mc-btn {
