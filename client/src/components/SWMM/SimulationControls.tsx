@@ -19,7 +19,7 @@ export function SimulationControls({ currentTime, isPlaying, onPlayPause, onTime
 
   return (
     <div className="mc-panel p-2 flex flex-col gap-2">
-      <div className="bg-black text-green-500 font-minecraft text-center p-2 border-2 border-gray-600 border-b-white border-r-white text-xl">
+      <div className="bg-black text-green-500 font-sans text-center p-2 border-2 border-gray-600 border-b-white border-r-white text-xl">
         {formatTime(currentTime)}
       </div>
       
@@ -47,11 +47,11 @@ export function SimulationControls({ currentTime, isPlaying, onPlayPause, onTime
 
       <div className="grid grid-cols-2 gap-2 mt-1">
         <div className="bg-black p-1 border border-gray-600">
-           <div className="text-[8px] text-gray-400 font-minecraft uppercase">Status</div>
+           <div className="text-[8px] text-gray-400 font-sans uppercase">Status</div>
            <div className="text-green-500 font-sans text-lg">{isPlaying ? "RUNNING" : "PAUSED"}</div>
         </div>
         <div className="bg-black p-1 border border-gray-600">
-           <div className="text-[8px] text-gray-400 font-minecraft uppercase">Rainfall</div>
+           <div className="text-[8px] text-gray-400 font-sans uppercase">Rainfall</div>
            <div className="text-blue-400 font-sans text-lg">{(Math.sin(currentTime) * 10).toFixed(1)} mm</div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { SimulationControls } from '@/components/SWMM/SimulationControls';
 import { MapCanvas } from '@/components/SWMM/MapCanvas';
 import { ProfileCanvas } from '@/components/SWMM/ProfileCanvas';
 import { Minimap } from '@/components/SWMM/Minimap';
+import { ProjectManager } from '@/components/SWMM/ProjectManager';
 import { SWMMState, Tool, Node, Link, Subcatchment, SteveState } from '@/lib/swmm-types';
 import { INITIAL_STEVE, updateSteve } from '@/lib/steve';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -117,6 +118,12 @@ export default function Home() {
         onExport={() => {}}
         onProfile={() => setShowProfile(!showProfile)}
         toggleTheme={toggleThemeHandler}
+        projectManagerSlot={
+          <ProjectManager 
+            currentModel={model} 
+            onLoadProject={setModel}
+          />
+        }
       />
       
       <div className="flex-1 flex overflow-hidden">

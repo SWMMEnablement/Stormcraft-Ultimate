@@ -156,7 +156,7 @@ export function ProfileCanvas({ nodes, links, selectedId, simulationTime }: Prof
 
   return (
     <div className="w-full h-full bg-black border-t-4 border-green-500 relative">
-        <div className="absolute top-0 left-0 bg-gray-900 text-green-500 font-minecraft text-[10px] px-2 py-1 border-b border-r border-gray-600">
+        <div className="absolute top-0 left-0 bg-gray-900 text-green-500 font-sans text-[10px] px-2 py-1 border-b border-r border-gray-600">
             HYDRAULIC PROFILE
         </div>
         <canvas ref={canvasRef} className="w-full h-full block" />

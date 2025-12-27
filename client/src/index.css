@@ -112,12 +112,8 @@
 }
 
 @layer utilities {
-  .font-minecraft {
-    font-family: var(--font-sans);
-  }
-  
   .mc-btn {
-    @apply font-minecraft text-[10px] uppercase border-4 border-white border-b-gray-700 border-r-gray-700 active:border-t-gray-700 active:border-l-gray-700 active:border-b-white active:border-r-white bg-gray-400 text-white px-3 py-2 hover:bg-gray-300 transition-colors cursor-pointer select-none shadow-md;
+    @apply font-sans text-[10px] uppercase border-4 border-white border-b-gray-700 border-r-gray-700 active:border-t-gray-700 active:border-l-gray-700 active:border-b-white active:border-r-white bg-gray-400 text-white px-3 py-2 hover:bg-gray-300 transition-colors cursor-pointer select-none shadow-md;
     text-shadow: 2px 2px 0 #000;
   }
   

@@ -10,7 +10,7 @@ export function PropertiesPanel({ selectedElement, onUpdate }: PropertiesPanelPr
   if (!selectedElement) {
     return (
       <div className="mc-panel p-4 h-full">
-        <div className="font-minecraft text-xs text-gray-600 text-center mt-10">
+        <div className="font-sans text-xs text-gray-600 text-center mt-10">
           Select an element to view properties
         </div>
       </div>
@@ -26,13 +26,13 @@ export function PropertiesPanel({ selectedElement, onUpdate }: PropertiesPanelPr
 
   return (
     <div className="mc-panel p-3 h-full overflow-y-auto">
-      <h3 className="font-minecraft text-xs border-b-2 border-gray-400 pb-2 mb-4 uppercase">
+      <h3 className="font-sans text-xs border-b-2 border-gray-400 pb-2 mb-4 uppercase">
         {selectedElement.type ? selectedElement.type : 'Properties'}
       </h3>
 
       <div className="space-y-3">
         <div className="flex flex-col gap-1">
-          <label className="font-minecraft text-[10px] text-gray-600">ID</label>
+          <label className="font-sans text-[10px] text-gray-600">ID</label>
           <input 
             className="mc-input text-sm"
             value={selectedElement.id}
@@ -43,7 +43,7 @@ export function PropertiesPanel({ selectedElement, onUpdate }: PropertiesPanelPr
         {/* Dynamic Fields based on type */}
         {'invertElev' in selectedElement && (
            <div className="flex flex-col gap-1">
-            <label className="font-minecraft text-[10px] text-gray-600">Invert Elev (ft)</label>
+            <label className="font-sans text-[10px] text-gray-600">Invert Elev (ft)</label>
             <input 
               className="mc-input text-sm"
               type="number"
@@ -55,7 +55,7 @@ export function PropertiesPanel({ selectedElement, onUpdate }: PropertiesPanelPr
 
         {'maxDepth' in selectedElement && (
            <div className="flex flex-col gap-1">
-            <label className="font-minecraft text-[10px] text-gray-600">Max Depth (ft)</label>
+            <label className="font-sans text-[10px] text-gray-600">Max Depth (ft)</label>
             <input 
               className="mc-input text-sm"
               type="number"
@@ -67,7 +67,7 @@ export function PropertiesPanel({ selectedElement, onUpdate }: PropertiesPanelPr
 
         {'roughness' in selectedElement && (
            <div className="flex flex-col gap-1">
-            <label className="font-minecraft text-[10px] text-gray-600">Roughness</label>
+            <label className="font-sans text-[10px] text-gray-600">Roughness</label>
             <input 
               className="mc-input text-sm"
               type="number"
@@ -80,7 +80,7 @@ export function PropertiesPanel({ selectedElement, onUpdate }: PropertiesPanelPr
         
         {'area' in selectedElement && (
            <div className="flex flex-col gap-1">
-            <label className="font-minecraft text-[10px] text-gray-600">Area (ac)</label>
+            <label className="font-sans text-[10px] text-gray-600">Area (ac)</label>
             <input 
               className="mc-input text-sm"
               type="number"

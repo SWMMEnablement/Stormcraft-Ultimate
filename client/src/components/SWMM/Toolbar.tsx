@@ -46,7 +46,7 @@ export function Toolbar({ activeTool, onToolChange, onZoomIn, onZoomOut, toggle3
           title={`${tool.label} (${tool.shortcut})`}
         >
           {tool.icon}
-          <div className="absolute left-full ml-2 bg-black text-white text-[10px] p-1 px-2 border border-white whitespace-nowrap hidden group-hover:block z-50 font-minecraft">
+          <div className="absolute left-full ml-2 bg-black text-white text-[10px] p-1 px-2 border border-white whitespace-nowrap hidden group-hover:block z-50 font-sans">
             {tool.label} ({tool.shortcut})
           </div>
         </button>
