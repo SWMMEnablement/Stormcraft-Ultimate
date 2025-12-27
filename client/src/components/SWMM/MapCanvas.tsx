@@ -69,6 +69,18 @@ export function MapCanvas({
     };
   };
 
+  // Helper: distance from point to line segment
+  const pointToLineDistance = (p: Point, a: { x: number; y: number }, b: { x: number; y: number }) => {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len2 = dx * dx + dy * dy;
+    if (len2 === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+    const px = a.x + t * dx;
+    const py = a.y + t * dy;
+    return Math.hypot(p.x - px, p.y - py);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -302,9 +314,41 @@ export function MapCanvas({
         playClick();
         onSelect(hitNode.id);
       } else {
-        // Check links (simplified line distance)
-        // ... omitted for brevity
-        onSelect(null);
+        // Check subcatchments (point-in-polygon test)
+        const hitSub = subcatchments.find(sub => {
+          if (sub.points.length < 3) return false;
+          let inside = false;
+          for (let i = 0, j = sub.points.length - 1; i < sub.points.length; j = i++) {
+            const xi = sub.points[i].x, yi = sub.points[i].y;
+            const xj = sub.points[j].x, yj = sub.points[j].y;
+            if (((yi > worldPos.y) !== (yj > worldPos.y)) &&
+                (worldPos.x < (xj - xi) * (worldPos.y - yi) / (yj - yi) + xi)) {
+              inside = !inside;
+            }
+          }
+          return inside;
+        });
+        
+        if (hitSub) {
+          playClick();
+          onSelect(hitSub.id);
+        } else {
+          // Check links
+          const hitLink = links.find(link => {
+            const fromNode = nodes.find(n => n.id === link.fromNode);
+            const toNode = nodes.find(n => n.id === link.toNode);
+            if (!fromNode || !toNode) return false;
+            const dist = pointToLineDistance(worldPos, fromNode, toNode);
+            return dist < 10;
+          });
+          
+          if (hitLink) {
+            playClick();
+            onSelect(hitLink.id);
+          } else {
+            onSelect(null);
+          }
+        }
       }
     } else if (['junction', 'outfall', 'storage', 'raingauge'].includes(tool)) {
       playPlop(); // Sound effect

@@ -173,6 +173,24 @@ export default function Home() {
                                       simSpeed={simSpeed}
                                     />
                                 </div>
+                                
+                                {/* Steve Tracker */}
+                                <div className="absolute bottom-4 right-4 mc-panel p-2 text-xs" data-testid="steve-tracker">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-cyan-600">👷</span>
+                                    <span className="font-sans">
+                                      Steve: {steve.action === 'idle' ? 'Idling' : steve.action === 'walking' ? `Walking to ${steve.targetNodeId}` : `Inspecting ${steve.targetNodeId}`}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-500 mt-1">
+                                    Position: ({Math.round(steve.x)}, {Math.round(steve.y)})
+                                  </div>
+                                  {steve.speech && (
+                                    <div className="mt-1 bg-yellow-100 border border-yellow-400 p-1 text-yellow-800">
+                                      💬 {steve.speech}
+                                    </div>
+                                  )}
+                                </div>
                             </div>
                         </div>
                     </ResizablePanel>
