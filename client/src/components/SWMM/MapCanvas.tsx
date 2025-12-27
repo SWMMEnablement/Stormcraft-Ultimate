@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Node, Link, Subcatchment, Tool, Point } from '@/lib/swmm-types';
+import { Node, Link, Subcatchment, Tool, Point, SteveState } from '@/lib/swmm-types';
 import { playClick, playPlop } from '@/lib/sound';
+import { drawSteve } from '@/lib/steve';
 
 interface MapCanvasProps {
   nodes: Node[];
@@ -14,6 +15,7 @@ interface MapCanvasProps {
   onAddSubcatchment: (subcatchment: Subcatchment) => void;
   is3D: boolean;
   simulationTime: number;
+  steve: SteveState;
 }
 
 export function MapCanvas({
@@ -27,7 +29,8 @@ export function MapCanvas({
   onAddLink,
   onAddSubcatchment,
   is3D,
-  simulationTime
+  simulationTime,
+  steve
 }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
@@ -260,6 +263,9 @@ export function MapCanvas({
         }
       });
 
+      // Draw Steve
+      drawSteve(ctx, steve, transform, is3D);
+
       ctx.restore();
       animationFrameId = requestAnimationFrame(render);
     };
@@ -270,7 +276,7 @@ export function MapCanvas({
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resize);
     };
-  }, [nodes, links, subcatchments, transform, selectedId, pendingLinkStart, pendingPolyPoints, is3D, lastMouse]);
+  }, [nodes, links, subcatchments, transform, selectedId, pendingLinkStart, pendingPolyPoints, is3D, lastMouse, steve]);
 
 
   // Interaction Handlers

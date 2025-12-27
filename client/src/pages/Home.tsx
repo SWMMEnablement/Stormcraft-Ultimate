@@ -6,7 +6,8 @@ import { SimulationControls } from '@/components/SWMM/SimulationControls';
 import { MapCanvas } from '@/components/SWMM/MapCanvas';
 import { ProfileCanvas } from '@/components/SWMM/ProfileCanvas';
 import { Minimap } from '@/components/SWMM/Minimap';
-import { SWMMState, Tool, Node, Link, Subcatchment } from '@/lib/swmm-types';
+import { SWMMState, Tool, Node, Link, Subcatchment, SteveState } from '@/lib/swmm-types';
+import { INITIAL_STEVE, updateSteve } from '@/lib/steve';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export default function Home() {
@@ -29,6 +30,9 @@ export default function Home() {
   const [is3D, setIs3D] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Steve State
+  const [steve, setSteve] = useState<SteveState>(INITIAL_STEVE);
 
   // Simulation State
   const [simTime, setSimTime] = useState(0);
@@ -70,6 +74,9 @@ export default function Home() {
                   flow: upNode ? upNode.depth * 2 : 0
               };
           });
+
+          // Update Steve
+          setSteve(currentSteve => updateSteve(currentSteve, newNodes, 0.1));
 
           return { ...prev, nodes: newNodes, links: newLinks };
         });
@@ -128,7 +135,7 @@ export default function Home() {
                     <ResizablePanel defaultSize={70}>
                         <div className="h-full relative flex flex-col bg-gray-100 dark:bg-gray-900">
                             <div className="flex-1 relative">
-                                <Minimap nodes={model.nodes} links={model.links} />
+                                <Minimap nodes={model.nodes} links={model.links} steve={steve} />
                                 <MapCanvas 
                                    nodes={model.nodes}
                                    links={model.links}
@@ -141,6 +148,7 @@ export default function Home() {
                                    onAddSubcatchment={(s) => setModel(prev => ({...prev, subcatchments: [...prev.subcatchments, s]}))}
                                    is3D={is3D}
                                    simulationTime={simTime}
+                                   steve={steve}
                                 />
                                 
                                 {/* Overlay Controls */}

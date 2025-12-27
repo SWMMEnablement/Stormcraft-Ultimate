@@ -1,12 +1,13 @@
 import React, { useRef, useEffect } from 'react';
-import { Node, Link } from '@/lib/swmm-types';
+import { Node, Link, SteveState } from '@/lib/swmm-types';
 
 interface MinimapProps {
   nodes: Node[];
   links: Link[];
+  steve: SteveState;
 }
 
-export function Minimap({ nodes, links }: MinimapProps) {
+export function Minimap({ nodes, links, steve }: MinimapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -75,7 +76,14 @@ export function Minimap({ nodes, links }: MinimapProps) {
         ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
     });
 
-  }, [nodes, links]);
+    // Draw Steve (Cyan Dot)
+    const stevePos = toScreen(steve.x, steve.y);
+    ctx.fillStyle = '#00AAAA'; // Steve Shirt Cyan
+    ctx.beginPath();
+    ctx.arc(stevePos.x, stevePos.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+  }, [nodes, links, steve]);
 
   return (
     <div className="absolute top-4 right-4 border-2 border-white bg-black shadow-lg z-10">
