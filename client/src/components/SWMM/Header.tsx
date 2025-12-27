@@ -10,9 +10,10 @@ interface HeaderProps {
   onProfile: () => void;
   toggleTheme: () => void;
   projectManagerSlot?: React.ReactNode;
+  importSlot?: React.ReactNode;
 }
 
-export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport, onProfile, toggleTheme, projectManagerSlot }: HeaderProps) {
+export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport, onProfile, toggleTheme, projectManagerSlot, importSlot }: HeaderProps) {
   return (
     <header className="h-14 bg-gradient-to-b from-gray-800 to-black border-b-4 border-black px-4 flex items-center justify-between text-white shrink-0">
       <div className="flex items-center gap-2">
@@ -23,6 +24,7 @@ export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport
       
       <div className="flex items-center gap-2">
         {projectManagerSlot}
+        {importSlot}
         <div className="w-[2px] h-6 bg-gray-600 mx-1"></div>
         <button onClick={onUndo} className="mc-btn">↶ UNDO</button>
         <button onClick={onRedo} className="mc-btn">↷ REDO</button>

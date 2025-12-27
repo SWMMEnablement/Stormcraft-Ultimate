@@ -7,6 +7,7 @@ import { MapCanvas } from '@/components/SWMM/MapCanvas';
 import { ProfileCanvas } from '@/components/SWMM/ProfileCanvas';
 import { Minimap } from '@/components/SWMM/Minimap';
 import { ProjectManager } from '@/components/SWMM/ProjectManager';
+import { ImportDialog } from '@/components/SWMM/ImportDialog';
 import { SWMMState, Tool, Node, Link, Subcatchment, SteveState } from '@/lib/swmm-types';
 import { INITIAL_STEVE, updateSteve } from '@/lib/steve';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -123,6 +124,9 @@ export default function Home() {
             currentModel={model} 
             onLoadProject={setModel}
           />
+        }
+        importSlot={
+          <ImportDialog onImport={setModel} />
         }
       />
       
