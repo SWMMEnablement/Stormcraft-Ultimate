@@ -17,6 +17,7 @@ import { TutorialState, INITIAL_TUTORIAL, TUTORIAL_STEPS, advanceTutorial } from
 import { BudgetConfig, DEFAULT_BUDGET, SANDBOX_BUDGET, canAfford } from '@/lib/budget';
 import { ChallengeLevel } from '@/lib/challenges';
 import { downloadInpFile } from '@/lib/swmm-export';
+import { DemoOverlay } from '@/components/SWMM/DemoOverlay';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export default function Home() {
@@ -40,6 +41,12 @@ export default function Home() {
   const [simTime, setSimTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [simSpeed, setSimSpeed] = useState(1);
+  const [showDemo, setShowDemo] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem('swmmcraft_demo_seen');
+    }
+    return true;
+  });
 
   const selectedElement = 
     model.nodes.find(n => n.id === selectedId) || 
@@ -194,8 +201,14 @@ export default function Home() {
     }
   };
 
+  const handleDismissDemo = useCallback(() => {
+    setShowDemo(false);
+    sessionStorage.setItem('swmmcraft_demo_seen', '1');
+  }, []);
+
   return (
     <div className={`h-screen flex flex-col overflow-hidden ${theme === 'dark' ? 'dark' : ''}`}>
+      {showDemo && <DemoOverlay onDismiss={handleDismissDemo} />}
       <Header 
         onUndo={() => {}} 
         onRedo={() => {}} 
