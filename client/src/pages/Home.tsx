@@ -58,7 +58,11 @@ export default function Home() {
     if (tutorial.active && !tutorial.dismissed && !tutorial.completed) {
       const step = TUTORIAL_STEPS[tutorial.currentStep];
       if (step) {
-        setSteve(s => ({ ...s, tutorialSpeech: step.steveSpeech }));
+        setSteve(s => ({
+          ...s,
+          tutorialSpeech: step.steveSpeech,
+          action: step.glowPosition ? 'pointing' as const : s.action,
+        }));
         if (step.highlightTool) {
           setActiveTool(step.highlightTool);
         }
@@ -233,20 +237,11 @@ export default function Home() {
       />
       
       <div className="flex-1 flex overflow-hidden">
-        <Toolbar 
-          activeTool={activeTool} 
-          onToolChange={setActiveTool}
-          onZoomIn={() => {}}
-          onZoomOut={() => {}}
-          toggle3D={() => setIs3D(!is3D)}
-          is3D={is3D}
-        />
-        
         <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={80}>
                 <ResizablePanelGroup direction="vertical">
                     <ResizablePanel defaultSize={70}>
-                        <div className="h-full relative flex flex-col bg-gray-100 dark:bg-gray-900">
+                        <div className="h-full relative flex flex-col">
                             <div className="flex-1 relative">
                                 <Minimap nodes={model.nodes} links={model.links} steve={steve} />
                                 <MapCanvas 
@@ -264,15 +259,13 @@ export default function Home() {
                                    steve={steve}
                                 />
 
-                                {/* Tutorial overlay */}
                                 <TutorialOverlay
                                   tutorial={tutorial}
                                   onDismiss={handleDismissTutorial}
                                   onAutoAdvance={handleTutorialAutoAdvance}
                                 />
-                                
-                                {/* Overlay Controls */}
-                                <div className="absolute bottom-4 left-4 w-64 space-y-2">
+
+                                <div className="absolute top-4 left-4 w-56 space-y-2 z-20">
                                     <SimulationControls 
                                       currentTime={simTime}
                                       isPlaying={isPlaying}
@@ -283,41 +276,26 @@ export default function Home() {
                                     />
                                     <BudgetBar model={model} budget={budget} />
                                 </div>
-                                
-                                {/* Steve Tracker */}
-                                <div className="absolute bottom-4 right-4 mc-panel p-2 text-xs max-w-48" data-testid="steve-tracker">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-lg">{getEmotionEmoji(steve.action)}</span>
-                                    <span className="font-sans font-bold">
-                                      Steve: {getEmotionLabel(steve.action)}
-                                    </span>
-                                  </div>
-                                  {steve.targetNodeId && (
-                                    <div className="text-gray-500 mt-1">
-                                      Target: {steve.targetNodeId}
-                                    </div>
-                                  )}
-                                  <div className="text-gray-500 mt-1">
-                                    ({Math.round(steve.x)}, {Math.round(steve.y)})
-                                  </div>
-                                  {steve.speech && !tutorial.active && (
-                                    <div className="mt-1 bg-yellow-100 border border-yellow-400 p-1 text-yellow-800 text-[10px]">
-                                      💬 {steve.speech}
-                                    </div>
-                                  )}
 
-                                  {/* Challenge info */}
-                                  {challenge && (
-                                    <div className="mt-2 pt-2 border-t border-gray-400">
-                                      <div className="font-bold text-xs">
-                                        {challenge.emoji} {challenge.name}
-                                      </div>
-                                      <div className="text-gray-500 text-[10px]">
-                                        {challenge.stormReturn}-yr storm | {challenge.terrain}
-                                      </div>
+                                <Toolbar
+                                  activeTool={activeTool}
+                                  onToolChange={setActiveTool}
+                                  onZoomIn={() => {}}
+                                  onZoomOut={() => {}}
+                                  toggle3D={() => setIs3D(!is3D)}
+                                  is3D={is3D}
+                                />
+                                
+                                {challenge && (
+                                  <div className="absolute bottom-16 right-4 bg-black/80 border-2 border-gray-600 p-2 max-w-48 z-20" data-testid="challenge-info">
+                                    <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '7px' }} className="text-yellow-400">
+                                      {challenge.emoji} {challenge.name}
                                     </div>
-                                  )}
-                                </div>
+                                    <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px' }} className="text-gray-400 mt-1">
+                                      {challenge.stormReturn}-yr storm | {challenge.terrain}
+                                    </div>
+                                  </div>
+                                )}
                             </div>
                         </div>
                     </ResizablePanel>

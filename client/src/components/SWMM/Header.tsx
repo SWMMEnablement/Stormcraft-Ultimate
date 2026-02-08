@@ -15,28 +15,32 @@ interface HeaderProps {
 
 export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport, onProfile, toggleTheme, projectManagerSlot, importSlot }: HeaderProps) {
   return (
-    <header className="h-14 bg-gradient-to-b from-gray-800 to-black border-b-4 border-black px-4 flex items-center justify-between text-white shrink-0">
-      <div className="flex items-center gap-2">
-        <div className="font-sans text-lg text-green-500 drop-shadow-md">
-          SWMM<span className="text-blue-500">CRAFT</span> <small className="text-yellow-400 text-[10px]">ULTIMATE</small>
+    <header className="h-10 bg-black/90 border-b-2 border-gray-700 px-3 flex items-center justify-between text-white shrink-0 z-20" data-testid="header">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1" style={{ fontFamily: '"Press Start 2P", monospace' }}>
+          <span className="text-green-400 text-sm tracking-wide">SWMM</span>
+          <span className="text-blue-400 text-sm tracking-wide">CRAFT</span>
+          <span className="text-yellow-400 text-[7px] ml-1 opacity-80">ULTIMATE</span>
+        </div>
+        <div className="w-px h-5 bg-gray-600" />
+        <div className="flex items-center gap-1">
+          {projectManagerSlot}
+          {importSlot}
         </div>
       </div>
-      
-      <div className="flex items-center gap-2">
-        {projectManagerSlot}
-        {importSlot}
-        <div className="w-[2px] h-6 bg-gray-600 mx-1"></div>
-        <button onClick={onUndo} className="mc-btn">↶ UNDO</button>
-        <button onClick={onRedo} className="mc-btn">↷ REDO</button>
-        <div className="w-[2px] h-6 bg-gray-600 mx-1"></div>
-        <button onClick={onCopy} className="mc-btn">📋 COPY</button>
-        <button onClick={onPaste} className="mc-btn">📄 PASTE</button>
-        <div className="w-[2px] h-6 bg-gray-600 mx-1"></div>
-        <button onClick={onAutoLayout} className="mc-btn">🔀 LAYOUT</button>
-        <button onClick={onProfile} className="mc-btn">📈 PROFILE</button>
-        <button onClick={onExport} className="mc-btn">💾 EXPORT</button>
-        <div className="w-[2px] h-6 bg-gray-600 mx-1"></div>
-        <button onClick={toggleTheme} className="mc-btn">🌙</button>
+
+      <div className="flex items-center gap-1">
+        <button onClick={onUndo} className="mc-btn-sm" data-testid="button-undo">UNDO</button>
+        <button onClick={onRedo} className="mc-btn-sm" data-testid="button-redo">REDO</button>
+        <div className="w-px h-4 bg-gray-600" />
+        <button onClick={onCopy} className="mc-btn-sm" data-testid="button-copy">COPY</button>
+        <button onClick={onPaste} className="mc-btn-sm" data-testid="button-paste">PASTE</button>
+        <div className="w-px h-4 bg-gray-600" />
+        <button onClick={onAutoLayout} className="mc-btn-sm" data-testid="button-layout">LAYOUT</button>
+        <button onClick={onProfile} className="mc-btn-sm" data-testid="button-profile">PROFILE</button>
+        <button onClick={onExport} className="mc-btn-sm mc-btn-primary-sm" data-testid="button-export">EXPORT</button>
+        <div className="w-px h-4 bg-gray-600" />
+        <button onClick={toggleTheme} className="mc-btn-sm" data-testid="button-theme">DAY/NIGHT</button>
       </div>
     </header>
   );

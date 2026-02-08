@@ -16,15 +16,29 @@ export const INITIAL_STEVE: SteveState = {
 
 const C = {
   SKIN: '#F9C9A9',
+  SKIN_SHADOW: '#D4A07A',
   HAIR: '#4A2B0F',
-  SHIRT: '#00AAAA',
+  HARDHAT: '#FFD700',
+  HARDHAT_BRIM: '#E6B800',
+  HARDHAT_STRIPE: '#FF8C00',
+  VEST: '#FF6600',
+  VEST_STRIPE: '#FFFF00',
+  VEST_DARK: '#CC5500',
+  SHIRT_UNDER: '#555555',
   PANTS: '#283593',
+  PANTS_DARK: '#1A237E',
   SHOES: '#333333',
-  CLIPBOARD: '#D4A017',
-  PAPER: '#FFFFFF',
-  WORRIED_SHIRT: '#FF6B6B',
-  SWIM_SHIRT: '#2196F3',
-  CELEBRATE_SHIRT: '#FFD700',
+  SHOES_SOLE: '#111111',
+  CLIPBOARD: '#8B6914',
+  CLIPBOARD_CLIP: '#C0C0C0',
+  PAPER: '#FFFFF0',
+  PAPER_LINE: '#CCCCCC',
+  EYE_WHITE: '#FFFFFF',
+  EYE_PUPIL: '#2C1810',
+  MOUTH: '#8F6352',
+  WORRIED_VEST: '#FF4444',
+  SWIM_VEST: '#2196F3',
+  CELEBRATE_VEST: '#FFD700',
 };
 
 const SMART_HINTS: string[] = [
@@ -79,6 +93,7 @@ export function getEmotionEmoji(action: SteveEmotion): string {
     case 'idle': return '👷';
     case 'walking': return '🏃';
     case 'inspecting': return '🔍';
+    case 'pointing': return '👉';
     case 'worried': return '😰';
     case 'swimming': return '🏊';
     case 'celebrating': return '🎉';
@@ -92,6 +107,7 @@ export function getEmotionLabel(action: SteveEmotion): string {
     case 'idle': return 'Idling';
     case 'walking': return 'Walking';
     case 'inspecting': return 'Inspecting';
+    case 'pointing': return 'Pointing';
     case 'worried': return 'Worried!';
     case 'swimming': return 'SWIMMING!';
     case 'celebrating': return 'Celebrating!';
@@ -220,6 +236,72 @@ export function updateSteve(steve: SteveState, nodes: Node[], links: Link[], dt:
   return s;
 }
 
+function px(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawHardHat(ctx: CanvasRenderingContext2D, headX: number, headY: number) {
+  px(ctx, headX - 2, headY - 4, 12, 2, C.HARDHAT);
+  px(ctx, headX, headY - 6, 8, 2, C.HARDHAT);
+  px(ctx, headX + 2, headY - 8, 4, 2, C.HARDHAT);
+
+  px(ctx, headX - 2, headY - 4, 12, 1, C.HARDHAT_BRIM);
+  px(ctx, headX + 1, headY - 6, 6, 1, C.HARDHAT_STRIPE);
+}
+
+function drawVest(ctx: CanvasRenderingContext2D, bx: number, by: number, w: number, h: number, vestColor: string) {
+  px(ctx, bx, by, w, h, vestColor);
+  px(ctx, bx + 1, by + 2, w - 2, 1, C.VEST_STRIPE);
+  px(ctx, bx + 1, by + h - 3, w - 2, 1, C.VEST_STRIPE);
+  px(ctx, bx + Math.floor(w / 2), by, 1, h, C.VEST_DARK);
+}
+
+function drawFace(ctx: CanvasRenderingContext2D, headX: number, headY: number, emotion: SteveEmotion, animFrame: number) {
+  px(ctx, headX, headY - 2, 8, 8, C.SKIN);
+  px(ctx, headX - 1, headY, 1, 4, C.SKIN);
+  px(ctx, headX + 8, headY, 1, 4, C.SKIN);
+
+  if (emotion === 'worried') {
+    px(ctx, headX + 1, headY + 1, 2, 2, C.EYE_WHITE);
+    px(ctx, headX + 5, headY + 1, 2, 2, C.EYE_WHITE);
+    px(ctx, headX + 1, headY + 1, 1, 1, C.EYE_PUPIL);
+    px(ctx, headX + 5, headY + 1, 1, 1, C.EYE_PUPIL);
+    px(ctx, headX + 2, headY, 1, 1, '#FF0000');
+    px(ctx, headX + 5, headY, 1, 1, '#FF0000');
+    ctx.fillStyle = C.MOUTH;
+    ctx.beginPath();
+    ctx.arc(headX + 4, headY + 5, 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (emotion === 'celebrating') {
+    px(ctx, headX + 1, headY + 1, 2, 2, C.EYE_WHITE);
+    px(ctx, headX + 5, headY + 1, 2, 2, C.EYE_WHITE);
+    px(ctx, headX + 1.5, headY + 1.5, 1, 1, C.EYE_PUPIL);
+    px(ctx, headX + 5.5, headY + 1.5, 1, 1, C.EYE_PUPIL);
+    px(ctx, headX + 2, headY + 4, 4, 1, '#FF6B6B');
+    px(ctx, headX + 3, headY + 5, 2, 1, '#FF6B6B');
+  } else if (emotion === 'sleeping') {
+    px(ctx, headX + 1, headY + 2, 3, 1, C.EYE_PUPIL);
+    px(ctx, headX + 5, headY + 2, 3, 1, C.EYE_PUPIL);
+    px(ctx, headX + 3, headY + 4, 2, 1, C.MOUTH);
+  } else if (emotion === 'swimming') {
+    px(ctx, headX + 1, headY + 1, 2, 2, C.EYE_WHITE);
+    px(ctx, headX + 5, headY + 1, 2, 2, C.EYE_WHITE);
+    const blink = Math.sin(animFrame * 0.3) > 0.8;
+    if (!blink) {
+      px(ctx, headX + 1.5, headY + 1.5, 1, 1, C.EYE_PUPIL);
+      px(ctx, headX + 5.5, headY + 1.5, 1, 1, C.EYE_PUPIL);
+    }
+    px(ctx, headX + 2, headY + 4, 4, 1, '#6699FF');
+  } else {
+    px(ctx, headX + 1, headY + 1, 2, 2, C.EYE_WHITE);
+    px(ctx, headX + 5, headY + 1, 2, 2, C.EYE_WHITE);
+    px(ctx, headX + 1.5, headY + 1.5, 1, 1, C.EYE_PUPIL);
+    px(ctx, headX + 5.5, headY + 1.5, 1, 1, C.EYE_PUPIL);
+    px(ctx, headX + 3, headY + 4, 2, 1, C.MOUTH);
+  }
+}
+
 export function drawSteve(
   ctx: CanvasRenderingContext2D,
   steve: SteveState,
@@ -228,203 +310,222 @@ export function drawSteve(
 ) {
   const x = steve.x;
   const y = steve.y;
+  const S = is3D ? 2 : 1.4;
 
   ctx.save();
   ctx.translate(x, y);
   if (!steve.facingRight) ctx.scale(-1, 1);
+  ctx.scale(S, S);
 
-  const bob = Math.sin(steve.animFrame * 0.2) * 2;
-  const legSwing = Math.sin(steve.animFrame * 0.5) * 6;
-  const armSwing = Math.sin(steve.animFrame * 0.5) * 8;
-  const scale = is3D ? 1.5 : 1;
-  ctx.scale(scale, scale);
-
+  const f = steve.animFrame;
+  const bob = Math.sin(f * 0.2) * 1.5;
   const isMoving = steve.action === 'walking' || steve.action === 'worried';
-  const bodyY = -24 + (isMoving ? Math.abs(bob) : 0);
+  const walkCycle = Math.floor(f / 4) % 4;
+  const legAngles = [0.4, 0.1, -0.4, -0.1];
+  const armAngles = [-0.3, -0.1, 0.3, 0.1];
+  const legAngle = isMoving ? legAngles[walkCycle] : 0;
+  const armAngle = isMoving ? armAngles[walkCycle] : 0;
 
-  let shirtColor = C.SHIRT;
-  if (steve.action === 'worried') shirtColor = C.WORRIED_SHIRT;
-  if (steve.action === 'swimming') shirtColor = C.SWIM_SHIRT;
-  if (steve.action === 'celebrating') shirtColor = C.CELEBRATE_SHIRT;
+  const baseY = isMoving ? -32 + Math.abs(bob) : -32;
 
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  let vestColor = C.VEST;
+  if (steve.action === 'worried') vestColor = C.WORRIED_VEST;
+  if (steve.action === 'swimming') vestColor = C.SWIM_VEST;
+  if (steve.action === 'celebrating') vestColor = C.CELEBRATE_VEST;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath();
   ctx.ellipse(0, 0, 8, 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (steve.action === 'swimming') {
-    const waterBob = Math.sin(steve.animFrame * 0.3) * 3;
-    ctx.fillStyle = 'rgba(74, 144, 226, 0.6)';
-    ctx.fillRect(-12, -8 + waterBob, 24, 16);
+    const waterBob = Math.sin(f * 0.25) * 2;
+    px(ctx, -10, -4 + waterBob, 20, 12, 'rgba(74, 144, 226, 0.6)');
+
+    drawFace(ctx, -4, baseY + 2 + waterBob, 'swimming', f);
+    drawHardHat(ctx, -4, baseY + 2 + waterBob);
 
     ctx.fillStyle = C.SKIN;
-    ctx.fillRect(-4, -20 + waterBob, 8, 8);
-    ctx.fillStyle = C.HAIR;
-    ctx.fillRect(-4, -20 + waterBob, 8, 2);
-
-    ctx.fillStyle = C.SKIN;
-    const armAngle = Math.sin(steve.animFrame * 0.4) * 0.8;
+    const aAngle = Math.sin(f * 0.4) * 0.8;
     ctx.save();
-    ctx.translate(4, -14 + waterBob);
-    ctx.rotate(armAngle);
+    ctx.translate(4, baseY + 10 + waterBob);
+    ctx.rotate(aAngle);
     ctx.fillRect(0, 0, 10, 3);
     ctx.restore();
     ctx.save();
-    ctx.translate(-4, -14 + waterBob);
-    ctx.rotate(-armAngle);
+    ctx.translate(-4, baseY + 10 + waterBob);
+    ctx.rotate(-aAngle);
     ctx.fillRect(-10, 0, 10, 3);
     ctx.restore();
   } else if (steve.action === 'sleeping') {
-    ctx.fillStyle = C.PANTS;
-    ctx.fillRect(-6, -6, 12, 6);
-    ctx.fillStyle = shirtColor;
-    ctx.fillRect(-6, -12, 12, 6);
-    ctx.fillStyle = C.SKIN;
-    ctx.fillRect(-4, -18, 8, 6);
-    ctx.fillStyle = C.HAIR;
-    ctx.fillRect(-4, -18, 8, 2);
+    px(ctx, -6, -4, 12, 4, C.SHOES);
+    px(ctx, -6, -8, 12, 4, C.PANTS);
+    drawVest(ctx, -6, -14, 12, 6, vestColor);
+    drawFace(ctx, -4, -22, 'sleeping', f);
+    drawHardHat(ctx, -4, -22);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '8px sans-serif';
+    ctx.font = 'bold 10px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
-    const zzz = 'Z'.repeat(1 + Math.floor((steve.animFrame % 40) / 13));
-    ctx.fillText(zzz, 8, -22);
+    const zCount = 1 + Math.floor((f % 60) / 20);
+    const zOffset = (f % 20) * 0.3;
+    for (let i = 0; i < zCount; i++) {
+      ctx.globalAlpha = 1 - (i * 0.3);
+      ctx.fillText('Z', 10 + i * 5, -26 - i * 6 - zOffset);
+    }
+    ctx.globalAlpha = 1;
   } else if (steve.action === 'celebrating') {
-    ctx.fillStyle = C.PANTS;
-    ctx.fillRect(-4, bodyY + 12, 4, 12);
-    ctx.fillRect(0, bodyY + 12, 4, 12);
-    ctx.fillStyle = shirtColor;
-    ctx.fillRect(-4, bodyY, 8, 12);
+    const jumpY = Math.abs(Math.sin(f * 0.15)) * 6;
+
+    px(ctx, -3, baseY + 24 - jumpY, 3, 8, C.PANTS);
+    px(ctx, 0, baseY + 24 - jumpY, 3, 8, C.PANTS);
+    px(ctx, -3, baseY + 30 - jumpY, 3, 2, C.SHOES);
+    px(ctx, 0, baseY + 30 - jumpY, 3, 2, C.SHOES);
+
+    drawVest(ctx, -5, baseY + 12 - jumpY, 10, 12, vestColor);
 
     ctx.fillStyle = C.SKIN;
     ctx.save();
-    ctx.translate(4, bodyY);
-    ctx.rotate(-1.2 + Math.sin(steve.animFrame * 0.3) * 0.3);
-    ctx.fillRect(0, -10, 3, 10);
+    ctx.translate(5, baseY + 12 - jumpY);
+    ctx.rotate(-1.3 + Math.sin(f * 0.25) * 0.4);
+    ctx.fillRect(0, -12, 3, 12);
     ctx.restore();
     ctx.save();
-    ctx.translate(-4, bodyY);
-    ctx.rotate(1.2 - Math.sin(steve.animFrame * 0.3) * 0.3);
-    ctx.fillRect(-3, -10, 3, 10);
+    ctx.translate(-5, baseY + 12 - jumpY);
+    ctx.rotate(1.3 - Math.sin(f * 0.25) * 0.4);
+    ctx.fillRect(-3, -12, 3, 12);
+    ctx.restore();
+
+    drawFace(ctx, -4, baseY + 2 - jumpY, 'celebrating', f);
+    drawHardHat(ctx, -4, baseY + 2 - jumpY);
+
+    ctx.fillStyle = '#FFD700';
+    const sparklePhase = (f % 30) / 30;
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 + sparklePhase * Math.PI * 2;
+      const sr = 14 + Math.sin(f * 0.1 + i) * 3;
+      const sx = Math.cos(angle) * sr;
+      const sy = -20 - jumpY + Math.sin(angle) * sr * 0.5;
+      ctx.globalAlpha = 0.6 + Math.sin(f * 0.2 + i) * 0.4;
+      px(ctx, sx - 1, sy - 1, 2, 2, '#FFD700');
+    }
+    ctx.globalAlpha = 1;
+  } else if (steve.action === 'pointing') {
+    px(ctx, -3, baseY + 24, 3, 8, C.PANTS);
+    px(ctx, 0, baseY + 24, 3, 8, C.PANTS);
+    px(ctx, -3, baseY + 30, 3, 2, C.SHOES);
+    px(ctx, 0, baseY + 30, 3, 2, C.SHOES);
+
+    drawVest(ctx, -5, baseY + 12, 10, 12, vestColor);
+
+    ctx.fillStyle = C.SKIN;
+    ctx.save();
+    ctx.translate(5, baseY + 14);
+    ctx.rotate(-0.8 + Math.sin(f * 0.15) * 0.1);
+    ctx.fillRect(0, -2, 14, 3);
+    px(ctx, 12, -3, 3, 2, C.SKIN);
     ctx.restore();
 
     ctx.fillStyle = C.SKIN;
-    ctx.fillRect(-4, bodyY - 8, 8, 8);
-    ctx.fillStyle = C.HAIR;
-    ctx.fillRect(-4, bodyY - 8, 8, 2);
+    ctx.fillRect(-7, baseY + 14, 3, 10);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, bodyY - 5, 2, 2);
-    ctx.fillRect(3, bodyY - 5, 2, 2);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0.5, bodyY - 4.5, 1, 1);
-    ctx.fillRect(3.5, bodyY - 4.5, 1, 1);
-    ctx.fillStyle = '#FF6B6B';
-    ctx.fillRect(1, bodyY - 1, 3, 1);
+    drawFace(ctx, -4, baseY + 2, steve.action, f);
+    drawHardHat(ctx, -4, baseY + 2);
+
+    const pulseR = 4 + Math.sin(f * 0.15) * 2;
+    ctx.strokeStyle = C.HARDHAT;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.6 + Math.sin(f * 0.15) * 0.3;
+    ctx.beginPath();
+    ctx.arc(22, baseY + 10, pulseR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   } else {
-    ctx.fillStyle = C.PANTS;
-    if (isMoving) {
-      ctx.save();
-      ctx.translate(2, bodyY + 12);
-      ctx.rotate(-legSwing * 0.1);
-      ctx.fillRect(-2, 0, 4, 12);
-      ctx.restore();
-      ctx.save();
-      ctx.translate(-2, bodyY + 12);
-      ctx.rotate(legSwing * 0.1);
-      ctx.fillRect(-2, 0, 4, 12);
-      ctx.restore();
-    } else {
-      ctx.fillRect(-4, bodyY + 12, 4, 12);
-      ctx.fillRect(0, bodyY + 12, 4, 12);
-    }
+    ctx.save();
+    ctx.translate(-2, baseY + 24);
+    ctx.rotate(legAngle);
+    px(ctx, -1, 0, 3, 8, C.PANTS);
+    px(ctx, -1, 6, 3, 2, C.SHOES);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(2, baseY + 24);
+    ctx.rotate(-legAngle);
+    px(ctx, -2, 0, 3, 8, C.PANTS);
+    px(ctx, -2, 6, 3, 2, C.SHOES);
+    ctx.restore();
 
-    ctx.fillStyle = shirtColor;
-    ctx.fillRect(-4, bodyY, 8, 12);
+    drawVest(ctx, -5, baseY + 12, 10, 12, vestColor);
 
-    if (isMoving) {
+    if (steve.action === 'inspecting') {
       ctx.fillStyle = C.SKIN;
       ctx.save();
-      ctx.translate(-4, bodyY + 2);
-      ctx.rotate(armSwing * 0.1);
-      ctx.fillRect(-2, 0, 4, 10);
+      ctx.translate(5, baseY + 14);
+      ctx.rotate(-0.3);
+      ctx.fillRect(0, 0, 3, 10);
+      px(ctx, 2, 4, 8, 12, C.CLIPBOARD);
+      px(ctx, 2, 4, 8, 1, C.CLIPBOARD_CLIP);
+      px(ctx, 5, 3, 2, 2, C.CLIPBOARD_CLIP);
+      px(ctx, 3, 6, 6, 9, C.PAPER);
+      px(ctx, 4, 7, 4, 1, C.PAPER_LINE);
+      px(ctx, 4, 9, 4, 1, C.PAPER_LINE);
+      px(ctx, 4, 11, 3, 1, C.PAPER_LINE);
+      ctx.restore();
+
+      ctx.fillStyle = C.SKIN;
+      ctx.fillRect(-7, baseY + 14, 3, 10);
+    } else if (isMoving) {
+      ctx.save();
+      ctx.translate(-5, baseY + 14);
+      ctx.rotate(armAngle);
+      px(ctx, -1, 0, 3, 10, C.SKIN);
       ctx.restore();
       ctx.save();
-      ctx.translate(4, bodyY + 2);
-      ctx.rotate(-armSwing * 0.1);
-      ctx.fillRect(-2, 0, 4, 10);
+      ctx.translate(5, baseY + 14);
+      ctx.rotate(-armAngle);
+      px(ctx, -2, 0, 3, 10, C.SKIN);
       ctx.restore();
-    } else if (steve.action === 'inspecting') {
-      ctx.fillStyle = C.SKIN;
-      ctx.fillRect(4, bodyY, 4, 10);
-      ctx.fillStyle = C.CLIPBOARD;
-      ctx.fillRect(6, bodyY + 4, 8, 10);
-      ctx.fillStyle = C.PAPER;
-      ctx.fillRect(7, bodyY + 5, 6, 8);
     } else {
-      ctx.fillStyle = C.SKIN;
-      ctx.fillRect(-6, bodyY, 2, 12);
-      ctx.fillRect(4, bodyY, 2, 12);
+      px(ctx, -7, baseY + 14, 3, 10, C.SKIN);
+      px(ctx, 4, baseY + 14, 3, 10, C.SKIN);
     }
 
-    ctx.fillStyle = C.SKIN;
-    ctx.fillRect(-4, bodyY - 8, 8, 8);
-    ctx.fillStyle = C.HAIR;
-    ctx.fillRect(-4, bodyY - 8, 8, 2);
-    ctx.fillRect(-4, bodyY - 6, 2, 2);
-    ctx.fillRect(2, bodyY - 6, 2, 2);
-
-    if (steve.action === 'worried') {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, bodyY - 6, 2, 3);
-      ctx.fillRect(3, bodyY - 6, 2, 3);
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0.5, bodyY - 5, 1, 1);
-      ctx.fillRect(3.5, bodyY - 5, 1, 1);
-      ctx.fillStyle = '#8F6352';
-      ctx.beginPath();
-      ctx.arc(2.5, bodyY - 1, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, bodyY - 5, 1, 1);
-      ctx.fillRect(3, bodyY - 5, 1, 1);
-      ctx.fillStyle = '#3F2832';
-      ctx.fillRect(1, bodyY - 5, 1, 1);
-      ctx.fillRect(4, bodyY - 5, 1, 1);
-      ctx.fillStyle = '#A97D64';
-      ctx.fillRect(1.5, bodyY - 3, 2, 1);
-      ctx.fillStyle = '#8F6352';
-      ctx.fillRect(1.5, bodyY - 1, 2, 1);
-    }
+    drawFace(ctx, -4, baseY + 2, steve.action, f);
+    drawHardHat(ctx, -4, baseY + 2);
   }
 
   ctx.restore();
 
   if (steve.speech) {
+    const bubbleY = y - (steve.action === 'swimming' ? 40 : 70) * S;
     ctx.save();
-    ctx.translate(x, y - (steve.action === 'swimming' ? 30 : 50));
+    ctx.translate(x, bubbleY);
 
-    ctx.font = '11px sans-serif';
-    const lines = wrapText(steve.speech, 180, ctx);
-    const lineHeight = 14;
-    const padding = 8;
-    const boxW = Math.min(200, Math.max(...lines.map(l => ctx.measureText(l).width)) + padding * 2);
+    ctx.font = '11px "Press Start 2P", monospace';
+    const lines = wrapText(steve.speech, 200, ctx);
+    const lineHeight = 16;
+    const padding = 10;
+    const boxW = Math.min(240, Math.max(...lines.map(l => ctx.measureText(l).width)) + padding * 2);
     const boxH = lines.length * lineHeight + padding * 2;
 
     const bubbleColor = steve.action === 'worried' ? '#FFF3CD' :
                         steve.action === 'swimming' ? '#D4EDDA' :
-                        steve.action === 'celebrating' ? '#FFF9C4' : '#FFFFFF';
+                        steve.action === 'celebrating' ? '#FFF9C4' :
+                        steve.action === 'pointing' ? '#E8F5E9' : '#FFFFFF';
 
     const borderColor = steve.action === 'worried' ? '#FF6B6B' :
                         steve.action === 'swimming' ? '#28A745' :
-                        steve.action === 'celebrating' ? '#FFD700' : '#000000';
+                        steve.action === 'celebrating' ? '#FFD700' :
+                        steve.action === 'pointing' ? '#4CAF50' : '#333333';
+
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
 
     ctx.fillStyle = bubbleColor;
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = 2;
 
-    const radius = 6;
+    const radius = 8;
     const bx = -boxW / 2;
     const by = -boxH;
     ctx.beginPath();
@@ -441,16 +542,26 @@ export function drawSteve(
     ctx.fill();
     ctx.stroke();
 
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
     ctx.beginPath();
-    ctx.moveTo(-4, 0);
-    ctx.lineTo(0, 8);
-    ctx.lineTo(4, 0);
+    ctx.moveTo(-6, 0);
+    ctx.lineTo(0, 10);
+    ctx.lineTo(6, 0);
     ctx.fillStyle = bubbleColor;
     ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-6, 0);
+    ctx.lineTo(0, 10);
     ctx.strokeStyle = borderColor;
     ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, 10);
+    ctx.lineTo(6, 0);
+    ctx.stroke();
 
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = '#222222';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     lines.forEach((line, i) => {

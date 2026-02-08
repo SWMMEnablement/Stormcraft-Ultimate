@@ -1,18 +1,10 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { SteveState } from '@/lib/swmm-types';
+import { drawSteve, INITIAL_STEVE } from '@/lib/steve';
 
 interface DemoOverlayProps {
   onDismiss: () => void;
 }
-
-const C = {
-  SKIN: '#F9C9A9',
-  HAIR: '#4A2B0F',
-  SHIRT: '#00AAAA',
-  PANTS: '#283593',
-  CLIPBOARD: '#D4A017',
-  PAPER: '#FFFFFF',
-  CELEBRATE_SHIRT: '#FFD700',
-};
 
 const COLORS = {
   junction: '#FF6B6B',
@@ -37,15 +29,6 @@ interface DemoLink {
   toId: string;
   flow: number;
   drawProgress: number;
-}
-
-interface DemoSteve {
-  x: number;
-  y: number;
-  facingRight: boolean;
-  animFrame: number;
-  speech: string | null;
-  action: 'idle' | 'walking' | 'inspecting' | 'celebrating';
 }
 
 type Phase =
@@ -74,8 +57,9 @@ export function DemoOverlay({ onDismiss }: DemoOverlayProps) {
   const tickRef = useRef(0);
   const nodesRef = useRef<DemoNode[]>([]);
   const linksRef = useRef<DemoLink[]>([]);
-  const steveRef = useRef<DemoSteve>({
-    x: 80, y: 300, facingRight: true, animFrame: 0, speech: null, action: 'idle'
+  const steveRef = useRef<SteveState>({
+    ...INITIAL_STEVE,
+    x: 80, y: 300,
   });
   const rainDropsRef = useRef<{ x: number; y: number; speed: number }[]>([]);
   const cursorRef = useRef<{ x: number; y: number; visible: boolean; clicking: boolean }>({
@@ -134,7 +118,7 @@ export function DemoOverlay({ onDismiss }: DemoOverlayProps) {
       s.x += (dx / dist) * speed;
       s.y += (dy / dist) * speed;
       s.facingRight = dx > 0;
-      s.action = 'walking';
+      s.action = 'walking' as const;
       return false;
     }
 
@@ -172,188 +156,8 @@ export function DemoOverlay({ onDismiss }: DemoOverlayProps) {
       ctx.globalAlpha = 1;
     }
 
-    function drawDemoSteve(ctx: CanvasRenderingContext2D, s: DemoSteve) {
-      ctx.save();
-      ctx.translate(s.x, s.y);
-      if (!s.facingRight) ctx.scale(-1, 1);
-
-      const bob = Math.sin(s.animFrame * 0.2) * 2;
-      const legSwing = Math.sin(s.animFrame * 0.5) * 6;
-      const armSwing = Math.sin(s.animFrame * 0.5) * 8;
-      const isMoving = s.action === 'walking';
-      const bodyY = -24 + (isMoving ? Math.abs(bob) : 0);
-
-      let shirtColor = C.SHIRT;
-      if (s.action === 'celebrating') shirtColor = C.CELEBRATE_SHIRT;
-
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 8, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (s.action === 'celebrating') {
-        ctx.fillStyle = C.PANTS;
-        ctx.fillRect(-4, bodyY + 12, 4, 12);
-        ctx.fillRect(0, bodyY + 12, 4, 12);
-        ctx.fillStyle = shirtColor;
-        ctx.fillRect(-4, bodyY, 8, 12);
-
-        ctx.fillStyle = C.SKIN;
-        ctx.save();
-        ctx.translate(4, bodyY);
-        ctx.rotate(-1.2 + Math.sin(s.animFrame * 0.3) * 0.3);
-        ctx.fillRect(0, -10, 3, 10);
-        ctx.restore();
-        ctx.save();
-        ctx.translate(-4, bodyY);
-        ctx.rotate(1.2 - Math.sin(s.animFrame * 0.3) * 0.3);
-        ctx.fillRect(-3, -10, 3, 10);
-        ctx.restore();
-
-        ctx.fillStyle = C.SKIN;
-        ctx.fillRect(-4, bodyY - 8, 8, 8);
-        ctx.fillStyle = C.HAIR;
-        ctx.fillRect(-4, bodyY - 8, 8, 2);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, bodyY - 5, 2, 2);
-        ctx.fillRect(3, bodyY - 5, 2, 2);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0.5, bodyY - 4.5, 1, 1);
-        ctx.fillRect(3.5, bodyY - 4.5, 1, 1);
-        ctx.fillStyle = '#FF6B6B';
-        ctx.fillRect(1, bodyY - 1, 3, 1);
-      } else {
-        ctx.fillStyle = C.PANTS;
-        if (isMoving) {
-          ctx.save();
-          ctx.translate(2, bodyY + 12);
-          ctx.rotate(-legSwing * 0.1);
-          ctx.fillRect(-2, 0, 4, 12);
-          ctx.restore();
-          ctx.save();
-          ctx.translate(-2, bodyY + 12);
-          ctx.rotate(legSwing * 0.1);
-          ctx.fillRect(-2, 0, 4, 12);
-          ctx.restore();
-        } else {
-          ctx.fillRect(-4, bodyY + 12, 4, 12);
-          ctx.fillRect(0, bodyY + 12, 4, 12);
-        }
-
-        ctx.fillStyle = shirtColor;
-        ctx.fillRect(-4, bodyY, 8, 12);
-
-        if (isMoving) {
-          ctx.fillStyle = C.SKIN;
-          ctx.save();
-          ctx.translate(-4, bodyY + 2);
-          ctx.rotate(armSwing * 0.1);
-          ctx.fillRect(-2, 0, 4, 10);
-          ctx.restore();
-          ctx.save();
-          ctx.translate(4, bodyY + 2);
-          ctx.rotate(-armSwing * 0.1);
-          ctx.fillRect(-2, 0, 4, 10);
-          ctx.restore();
-        } else if (s.action === 'inspecting') {
-          ctx.fillStyle = C.SKIN;
-          ctx.fillRect(4, bodyY, 4, 10);
-          ctx.fillStyle = C.CLIPBOARD;
-          ctx.fillRect(6, bodyY + 4, 8, 10);
-          ctx.fillStyle = C.PAPER;
-          ctx.fillRect(7, bodyY + 5, 6, 8);
-        } else {
-          ctx.fillStyle = C.SKIN;
-          ctx.fillRect(-6, bodyY, 2, 12);
-          ctx.fillRect(4, bodyY, 2, 12);
-        }
-
-        ctx.fillStyle = C.SKIN;
-        ctx.fillRect(-4, bodyY - 8, 8, 8);
-        ctx.fillStyle = C.HAIR;
-        ctx.fillRect(-4, bodyY - 8, 8, 2);
-        ctx.fillRect(-4, bodyY - 6, 2, 2);
-        ctx.fillRect(2, bodyY - 6, 2, 2);
-
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, bodyY - 5, 1, 1);
-        ctx.fillRect(3, bodyY - 5, 1, 1);
-        ctx.fillStyle = '#3F2832';
-        ctx.fillRect(1, bodyY - 5, 1, 1);
-        ctx.fillRect(4, bodyY - 5, 1, 1);
-        ctx.fillStyle = '#A97D64';
-        ctx.fillRect(1.5, bodyY - 3, 2, 1);
-        ctx.fillStyle = '#8F6352';
-        ctx.fillRect(1.5, bodyY - 1, 2, 1);
-      }
-
-      ctx.restore();
-
-      if (s.speech) {
-        ctx.save();
-        ctx.translate(s.x, s.y - 55);
-        ctx.font = '12px "Press Start 2P", monospace';
-        const words = s.speech.split(' ');
-        const lines: string[] = [];
-        let line = '';
-        for (const w of words) {
-          const test = line ? line + ' ' + w : w;
-          if (ctx.measureText(test).width > 180) {
-            lines.push(line);
-            line = w;
-          } else {
-            line = test;
-          }
-        }
-        if (line) lines.push(line);
-
-        const lineH = 16;
-        const pad = 8;
-        const boxW = Math.min(220, Math.max(...lines.map(l => ctx.measureText(l).width)) + pad * 2);
-        const boxH = lines.length * lineH + pad * 2;
-
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        const r = 6;
-        const bx = -boxW / 2;
-        const by = -boxH;
-        ctx.moveTo(bx + r, by);
-        ctx.lineTo(bx + boxW - r, by);
-        ctx.quadraticCurveTo(bx + boxW, by, bx + boxW, by + r);
-        ctx.lineTo(bx + boxW, by + boxH - r);
-        ctx.quadraticCurveTo(bx + boxW, by + boxH, bx + boxW - r, by + boxH);
-        ctx.lineTo(bx + r, by + boxH);
-        ctx.quadraticCurveTo(bx, by + boxH, bx, by + boxH - r);
-        ctx.lineTo(bx, by + r);
-        ctx.quadraticCurveTo(bx, by, bx + r, by);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.moveTo(0, by + boxH);
-        ctx.lineTo(-5, by + boxH + 8);
-        ctx.lineTo(5, by + boxH);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.beginPath();
-        ctx.moveTo(0, by + boxH);
-        ctx.lineTo(-5, by + boxH + 8);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(-5, by + boxH + 8);
-        ctx.lineTo(5, by + boxH);
-        ctx.stroke();
-
-        ctx.fillStyle = '#333333';
-        ctx.textAlign = 'center';
-        lines.forEach((l, i) => {
-          ctx.fillText(l, 0, by + pad + lineH * (i + 0.8));
-        });
-        ctx.restore();
-      }
+    function drawDemoSteve(ctx: CanvasRenderingContext2D, s: SteveState) {
+      drawSteve(ctx, s, { x: 0, y: 0, k: 1 }, false);
     }
 
     function drawDemoNode(ctx: CanvasRenderingContext2D, n: DemoNode) {
@@ -510,7 +314,7 @@ export function DemoOverlay({ onDismiss }: DemoOverlayProps) {
 
       if (phase === 'place_junction_prompt') {
         s.speech = 'Place a junction here!';
-        s.action = 'inspecting';
+        s.action = 'pointing';
         s.facingRight = true;
         if (pt > 50) {
           cursorRef.current.visible = true;

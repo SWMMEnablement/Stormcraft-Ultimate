@@ -44,7 +44,7 @@ export interface SWMMState {
   subcatchments: Subcatchment[];
 }
 
-export type SteveEmotion = 'idle' | 'walking' | 'inspecting' | 'worried' | 'swimming' | 'celebrating' | 'sleeping';
+export type SteveEmotion = 'idle' | 'walking' | 'inspecting' | 'pointing' | 'worried' | 'swimming' | 'celebrating' | 'sleeping';
 
 export interface SteveState {
   x: number;

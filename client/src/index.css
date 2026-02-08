@@ -116,7 +116,37 @@
     @apply font-sans text-[10px] uppercase border-4 border-white border-b-gray-700 border-r-gray-700 active:border-t-gray-700 active:border-l-gray-700 active:border-b-white active:border-r-white bg-gray-400 text-white px-3 py-2 hover:bg-gray-300 transition-colors cursor-pointer select-none shadow-md;
     text-shadow: 2px 2px 0 #000;
   }
-  
+
+  .mc-btn-sm {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    text-transform: uppercase;
+    border: 2px outset #888;
+    background: #555;
+    color: #ddd;
+    padding: 3px 6px;
+    cursor: pointer;
+    user-select: none;
+    text-shadow: 1px 1px 0 #000;
+    image-rendering: pixelated;
+  }
+  .mc-btn-sm:hover {
+    background: #666;
+    color: #fff;
+  }
+  .mc-btn-sm:active {
+    border-style: inset;
+  }
+
+  .mc-btn-primary-sm {
+    background: #2563EB;
+    border-color: #60A5FA;
+    color: #fff;
+  }
+  .mc-btn-primary-sm:hover {
+    background: #3B82F6;
+  }
+
   .mc-btn-primary {
     @apply bg-blue-500 hover:bg-blue-400;
   }

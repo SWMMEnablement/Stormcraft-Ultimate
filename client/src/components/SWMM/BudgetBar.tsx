@@ -17,28 +17,34 @@ export function BudgetBar({ model, budget }: BudgetBarProps) {
   const isWarning = pct > 75 && !isOverBudget;
 
   return (
-    <div className="mc-panel p-2 text-xs" data-testid="budget-bar">
+    <div className="bg-black/80 border-2 border-gray-600 p-2" data-testid="budget-bar" style={{ imageRendering: 'pixelated' }}>
       <div className="flex items-center justify-between mb-1">
-        <span className="font-bold">
-          {isOverBudget ? '🚨' : '💰'} BUDGET
+        <span
+          className="text-yellow-400"
+          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '7px' }}
+        >
+          BUDGET
         </span>
-        <span className={isOverBudget ? 'text-red-600 font-bold' : isWarning ? 'text-yellow-600' : 'text-green-600'}>
-          {formatMoney(remaining)} left
+        <span
+          className={isOverBudget ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-green-400'}
+          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '7px' }}
+        >
+          {formatMoney(remaining)}
         </span>
       </div>
-      <div className="h-3 bg-gray-400 border border-gray-600 rounded-sm overflow-hidden">
+      <div className="h-2 bg-gray-800 border border-gray-600 overflow-hidden">
         <div
           className={`h-full transition-all duration-300 ${
             isOverBudget ? 'bg-red-500' :
             isWarning ? 'bg-yellow-500' :
             'bg-green-500'
           }`}
-          style={{ width: `${Math.min(100, pct)}%` }}
+          style={{ width: `${Math.min(100, pct)}%`, imageRendering: 'pixelated' }}
         />
       </div>
-      <div className="flex justify-between mt-1 text-gray-600">
-        <span>Spent: {formatMoney(spent)}</span>
-        <span>Total: {formatMoney(budget.total)}</span>
+      <div className="flex justify-between mt-1" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px' }}>
+        <span className="text-gray-400">{formatMoney(spent)}</span>
+        <span className="text-gray-400">{formatMoney(budget.total)}</span>
       </div>
     </div>
   );
