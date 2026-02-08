@@ -44,15 +44,18 @@ export interface SWMMState {
   subcatchments: Subcatchment[];
 }
 
+export type SteveEmotion = 'idle' | 'walking' | 'inspecting' | 'worried' | 'swimming' | 'celebrating' | 'sleeping';
+
 export interface SteveState {
   x: number;
   y: number;
   targetNodeId: string | null;
-  action: 'idle' | 'walking' | 'inspecting';
+  action: SteveEmotion;
   facingRight: boolean;
   animFrame: number;
   speech: string | null;
   inspectionTimer: number;
+  tutorialSpeech: string | null;
 }
 
 export type Tool = 'select' | 'pan' | 'junction' | 'outfall' | 'storage' | 'conduit' | 'subcatchment' | 'raingauge' | 'delete';
