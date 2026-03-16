@@ -11,9 +11,10 @@ interface HeaderProps {
   toggleTheme: () => void;
   projectManagerSlot?: React.ReactNode;
   importSlot?: React.ReactNode;
+  demoPickerSlot?: React.ReactNode;
 }
 
-export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport, onProfile, toggleTheme, projectManagerSlot, importSlot }: HeaderProps) {
+export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport, onProfile, toggleTheme, projectManagerSlot, importSlot, demoPickerSlot }: HeaderProps) {
   return (
     <header className="h-10 bg-black/90 border-b-2 border-gray-700 px-3 flex items-center justify-between text-white shrink-0 z-20" data-testid="header">
       <div className="flex items-center gap-3">
@@ -25,6 +26,7 @@ export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport
         <div className="w-px h-5 bg-gray-600" />
         <div className="flex items-center gap-1">
           {projectManagerSlot}
+          {demoPickerSlot}
           {importSlot}
         </div>
       </div>

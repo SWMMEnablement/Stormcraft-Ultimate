@@ -18,6 +18,7 @@ import { BudgetConfig, DEFAULT_BUDGET, SANDBOX_BUDGET, canAfford } from '@/lib/b
 import { ChallengeLevel } from '@/lib/challenges';
 import { downloadInpFile } from '@/lib/swmm-export';
 import { DemoOverlay } from '@/components/SWMM/DemoOverlay';
+import { DemoModelPicker } from '@/components/SWMM/DemoModelPicker';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export default function Home() {
@@ -227,6 +228,9 @@ export default function Home() {
             currentModel={model} 
             onLoadProject={setModel}
           />
+        }
+        demoPickerSlot={
+          <DemoModelPicker onLoadModel={setModel} />
         }
         importSlot={
           <>
