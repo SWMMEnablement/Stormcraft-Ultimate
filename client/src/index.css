@@ -113,48 +113,111 @@
 
 @layer utilities {
   .mc-btn {
-    @apply font-sans text-[10px] uppercase border-4 border-white border-b-gray-700 border-r-gray-700 active:border-t-gray-700 active:border-l-gray-700 active:border-b-white active:border-r-white bg-gray-400 text-white px-3 py-2 hover:bg-gray-300 transition-colors cursor-pointer select-none shadow-md;
-    text-shadow: 2px 2px 0 #000;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    text-transform: uppercase;
+    color: #fff;
+    background-color: #8B8B8B;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    user-select: none;
+    image-rendering: pixelated;
+    text-shadow: 2px 2px #3f3f3f;
+    box-shadow:
+      inset -2px -4px 0px 0px #373737,
+      inset  2px  2px 0px 0px #C6C6C6,
+      inset -4px -6px 0px 0px #555555;
+  }
+  .mc-btn:hover {
+    background-color: #a0a7ff;
+    color: #FFFF55;
+  }
+  .mc-btn:active {
+    box-shadow:
+      inset  2px  4px 0px 0px #373737,
+      inset -2px -2px 0px 0px #C6C6C6,
+      inset  4px  6px 0px 0px #555555;
+    transform: translate(1px, 1px);
   }
 
   .mc-btn-sm {
     font-family: 'Press Start 2P', monospace;
     font-size: 7px;
     text-transform: uppercase;
-    border: 2px outset #888;
-    background: #555;
     color: #ddd;
-    padding: 3px 6px;
+    background-color: #555;
+    border: none;
+    padding: 4px 8px;
     cursor: pointer;
     user-select: none;
-    text-shadow: 1px 1px 0 #000;
     image-rendering: pixelated;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow:
+      inset -1px -2px 0px 0px #373737,
+      inset  1px  1px 0px 0px #888,
+      inset -2px -3px 0px 0px #444;
   }
   .mc-btn-sm:hover {
-    background: #666;
-    color: #fff;
+    background-color: #7080cc;
+    color: #FFFF55;
   }
   .mc-btn-sm:active {
-    border-style: inset;
+    box-shadow:
+      inset  1px  2px 0px 0px #373737,
+      inset -1px -1px 0px 0px #888,
+      inset  2px  3px 0px 0px #444;
+    transform: translate(1px, 1px);
   }
 
   .mc-btn-primary-sm {
     background: #2563EB;
-    border-color: #60A5FA;
     color: #fff;
   }
   .mc-btn-primary-sm:hover {
-    background: #3B82F6;
+    background: #5B82FF;
   }
 
   .mc-btn-primary {
-    @apply bg-blue-500 hover:bg-blue-400;
+    background-color: #2563EB;
+  }
+  .mc-btn-primary:hover {
+    background-color: #5B82FF;
   }
 
   .mc-btn-danger {
-    @apply bg-red-500 hover:bg-red-400;
+    background-color: #E74C3C;
   }
-  
+  .mc-btn-danger:hover {
+    background-color: #FF6B5B;
+  }
+
+  .mc-tab {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 4px 8px;
+    background: #555;
+    color: #ccc;
+    text-shadow: 1px 1px #000;
+    border: 2px solid #777;
+    border-bottom: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    image-rendering: pixelated;
+  }
+  .mc-tab:hover {
+    background: #6a6a6a;
+    color: #fff;
+  }
+  .mc-tab.active {
+    background: #c6c6c6;
+    color: #222;
+    text-shadow: none;
+    transform: translateY(-2px);
+    border-color: #fff;
+  }
+
   .mc-panel {
     @apply border-4 border-white border-b-gray-700 border-r-gray-700 bg-gray-200 text-gray-900;
   }
@@ -162,4 +225,21 @@
   .mc-input {
     @apply font-sans text-lg border-2 border-gray-600 border-b-white border-r-white bg-black text-green-400 px-2 py-1 outline-none focus:border-blue-500;
   }
+}
+
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: #2a2a2a; }
+::-webkit-scrollbar-thumb {
+  background: #666;
+  border: 2px solid #333;
+}
+
+@keyframes flood-pulse {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+
+@keyframes surcharge-flash {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(255,68,68,0.3); }
+  50%      { box-shadow: 0 0 12px 4px rgba(255,68,68,0.7); }
 }

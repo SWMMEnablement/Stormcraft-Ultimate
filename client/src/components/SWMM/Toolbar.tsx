@@ -157,56 +157,88 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
   };
 
   return (
-    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-30 pb-2 pointer-events-none" data-testid="toolbar-hotbar">
-      <div className="flex items-end gap-0 pointer-events-auto">
-        {tools.map((tool) => (
-          <button
-            key={tool.id}
-            data-testid={`button-tool-${tool.id}`}
-            onClick={() => handleToolClick(tool.id)}
-            className={cn(
-              "w-12 h-12 flex flex-col items-center justify-center relative border-2 transition-all",
-              activeTool === tool.id
-                ? "bg-gray-500 border-white scale-110 z-10 shadow-lg shadow-white/20"
-                : "bg-gray-700 border-gray-500 hover:bg-gray-600 hover:border-gray-400"
-            )}
-            style={{
-              borderStyle: 'outset',
-              imageRendering: 'pixelated',
-            }}
-            title={`${tool.label} (${tool.slot})`}
-          >
-            <PixelIcon type={tool.id} />
-            <span
-              className={cn(
-                "absolute -top-0.5 -right-0.5 text-[8px] font-bold px-1 leading-none",
-                activeTool === tool.id ? "text-yellow-300" : "text-gray-400"
-              )}
-              style={{ fontFamily: '"Press Start 2P", monospace' }}
+    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-30 pointer-events-none" data-testid="toolbar-hotbar">
+      <div
+        className="flex items-end gap-1 pointer-events-auto"
+        style={{
+          padding: '6px 8px',
+          background: 'rgba(0,0,0,0.75)',
+          border: '2px solid #aaa',
+          borderBottom: 'none',
+        }}
+      >
+        {tools.map((tool) => {
+          const isActive = activeTool === tool.id;
+          return (
+            <button
+              key={tool.id}
+              data-testid={`button-tool-${tool.id}`}
+              onClick={() => handleToolClick(tool.id)}
+              className="flex flex-col items-center justify-center relative"
+              style={{
+                width: 52,
+                height: 52,
+                background: isActive ? '#555' : '#2a2a2a',
+                border: isActive ? '2px solid #fff' : '2px solid #555',
+                cursor: 'pointer',
+                imageRendering: 'pixelated',
+                boxShadow: isActive
+                  ? 'inset 1px 1px 0 #888, inset -1px -1px 0 #000, 0 0 0 2px #fff'
+                  : 'inset 1px 1px 0 #555, inset -1px -1px 0 #000',
+                transition: 'background 0.1s, border-color 0.1s',
+                transform: isActive ? 'translateY(-4px)' : 'none',
+              }}
+              title={`${tool.label} (${tool.slot})`}
             >
-              {tool.slot}
-            </span>
-            {activeTool === tool.id && (
+              <PixelIcon type={tool.id} />
               <span
-                className="absolute -bottom-4 text-[7px] text-white whitespace-nowrap"
-                style={{ fontFamily: '"Press Start 2P", monospace', textShadow: '1px 1px 0 #000' }}
+                className="absolute"
+                style={{
+                  top: 2,
+                  left: 4,
+                  fontFamily: '"Press Start 2P", monospace',
+                  fontSize: '7px',
+                  color: isActive ? '#FFFF55' : '#aaa',
+                  textShadow: '1px 1px #000',
+                }}
               >
-                {tool.label}
+                {tool.slot}
               </span>
-            )}
-          </button>
-        ))}
-        <div className="w-1" />
+              {isActive && (
+                <span
+                  className="absolute whitespace-nowrap"
+                  style={{
+                    bottom: -14,
+                    fontFamily: '"Press Start 2P", monospace',
+                    fontSize: '7px',
+                    color: '#fff',
+                    textShadow: '1px 1px 0 #000',
+                  }}
+                >
+                  {tool.label}
+                </span>
+              )}
+            </button>
+          );
+        })}
+        <div style={{ width: 4 }} />
         <button
           data-testid="button-toggle-3d"
           onClick={() => { playClick(); toggle3D(); }}
-          className={cn(
-            "w-12 h-12 flex items-center justify-center border-2 transition-all",
-            is3D
-              ? "bg-purple-700 border-purple-400 scale-110"
-              : "bg-gray-700 border-gray-500 hover:bg-gray-600"
-          )}
-          style={{ borderStyle: 'outset' }}
+          className="flex items-center justify-center"
+          style={{
+            width: 52,
+            height: 52,
+            background: is3D ? '#5c2d8c' : '#2a2a2a',
+            border: is3D ? '2px solid #a569bd' : '2px solid #555',
+            cursor: 'pointer',
+            imageRendering: 'pixelated',
+            boxShadow: is3D
+              ? 'inset 1px 1px 0 #a569bd, inset -1px -1px 0 #000, 0 0 0 2px #a569bd'
+              : 'inset 1px 1px 0 #555, inset -1px -1px 0 #000',
+            transform: is3D ? 'translateY(-4px)' : 'none',
+            transition: 'background 0.1s',
+          }}
           title="Toggle 3D (Tab)"
         >
           <PixelIcon type="3d" />

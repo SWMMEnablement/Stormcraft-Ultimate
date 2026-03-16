@@ -16,35 +16,59 @@ export function BudgetBar({ model, budget }: BudgetBarProps) {
   const isOverBudget = remaining < 0;
   const isWarning = pct > 75 && !isOverBudget;
 
+  const barColor = isOverBudget ? '#FF5555' : isWarning ? '#FFFF55' : '#55FF55';
+  const labelColor = isOverBudget ? '#FF5555' : isWarning ? '#FFFF55' : '#55FF55';
+
   return (
-    <div className="bg-black/80 border-2 border-gray-600 p-2" data-testid="budget-bar" style={{ imageRendering: 'pixelated' }}>
+    <div
+      className="p-2"
+      style={{
+        background: 'rgba(0,0,0,0.85)',
+        border: '2px solid #555',
+        imageRendering: 'pixelated',
+      }}
+      data-testid="budget-bar"
+    >
       <div className="flex items-center justify-between mb-1">
         <span
-          className="text-yellow-400"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '7px' }}
+          style={{
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '7px',
+            color: '#FFFF55',
+            textShadow: '1px 1px 0 #000',
+          }}
         >
           BUDGET
         </span>
         <span
-          className={isOverBudget ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-green-400'}
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '7px' }}
+          style={{
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '7px',
+            color: labelColor,
+            textShadow: '1px 1px 0 #000',
+          }}
         >
           {formatMoney(remaining)}
         </span>
       </div>
-      <div className="h-2 bg-gray-800 border border-gray-600 overflow-hidden">
+      <div style={{ height: 6, background: '#333', border: '1px solid #555', overflow: 'hidden' }}>
         <div
-          className={`h-full transition-all duration-300 ${
-            isOverBudget ? 'bg-red-500' :
-            isWarning ? 'bg-yellow-500' :
-            'bg-green-500'
-          }`}
-          style={{ width: `${Math.min(100, pct)}%`, imageRendering: 'pixelated' }}
+          style={{
+            height: '100%',
+            width: `${Math.min(100, pct)}%`,
+            background: barColor,
+            transition: 'width 0.3s',
+            imageRendering: 'pixelated',
+          }}
         />
       </div>
-      <div className="flex justify-between mt-1" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px' }}>
-        <span className="text-gray-400">{formatMoney(spent)}</span>
-        <span className="text-gray-400">{formatMoney(budget.total)}</span>
+      <div className="flex justify-between mt-1">
+        <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px', color: '#888', textShadow: '1px 1px 0 #000' }}>
+          {formatMoney(spent)}
+        </span>
+        <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px', color: '#888', textShadow: '1px 1px 0 #000' }}>
+          {formatMoney(budget.total)}
+        </span>
       </div>
     </div>
   );

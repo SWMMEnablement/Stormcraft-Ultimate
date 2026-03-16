@@ -17,30 +17,86 @@ export function SimulationControls({ currentTime, isPlaying, onPlayPause, onTime
   };
 
   const rainIntensity = Math.max(0, Math.exp(-Math.abs(currentTime - 6) * 0.3));
+  const rainPct = Math.round(rainIntensity * 100);
   const rainBars = Math.round(rainIntensity * 8);
 
   return (
-    <div className="bg-black/80 border-2 border-gray-600 p-2 flex flex-col gap-1.5" style={{ imageRendering: 'pixelated' }} data-testid="sim-controls">
+    <div
+      className="border-2 p-2 flex flex-col gap-1.5"
+      style={{
+        imageRendering: 'pixelated',
+        background: 'rgba(0,0,0,0.85)',
+        borderColor: '#555',
+        minWidth: 200,
+      }}
+      data-testid="sim-controls"
+    >
+      <div
+        className="text-center px-2 py-1"
+        style={{
+          background: '#000',
+          border: '2px inset #555',
+          fontFamily: '"Press Start 2P", monospace',
+          fontSize: '18px',
+          color: '#55FF55',
+          textShadow: '0 0 8px #00ff00',
+          letterSpacing: '4px',
+        }}
+      >
+        {formatTime(currentTime)}
+      </div>
+
       <div className="flex items-center gap-2">
-        <div
-          className="bg-black border border-gray-500 text-green-400 text-center px-2 py-1 flex-1"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '14px' }}
+        <span
+          style={{
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '7px',
+            color: '#aaa',
+            textTransform: 'uppercase',
+          }}
         >
-          {formatTime(currentTime)}
+          RAIN
+        </span>
+        <div
+          className="flex-1 relative"
+          style={{
+            height: 8,
+            background: '#333',
+            border: '1px solid #666',
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${rainPct}%`,
+              background: '#4488ff',
+              transition: 'width 0.3s',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: -2,
+              left: `${rainPct}%`,
+              transform: 'translateX(-4px)',
+              width: 8,
+              height: 8,
+              background: '#ff3333',
+              borderRadius: '50%',
+              border: '1px solid #cc0000',
+              transition: 'left 0.3s',
+            }}
+          />
         </div>
-        <div className="flex flex-col items-center">
-          <div className="text-[7px] text-gray-400 uppercase" style={{ fontFamily: '"Press Start 2P", monospace' }}>
-            Rain
-          </div>
-          <div className="flex gap-px">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-3 ${i < rainBars ? 'bg-blue-400' : 'bg-gray-700'}`}
-              />
-            ))}
-          </div>
-        </div>
+        <span
+          style={{
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '7px',
+            color: '#4488ff',
+          }}
+        >
+          {(rainIntensity * 10).toFixed(1)}
+        </span>
       </div>
 
       <input
@@ -50,9 +106,13 @@ export function SimulationControls({ currentTime, isPlaying, onPlayPause, onTime
         step="0.1"
         value={currentTime}
         onChange={(e) => onTimeChange(parseFloat(e.target.value))}
-        className="w-full h-2 bg-gray-800 appearance-none border border-gray-600 cursor-pointer"
+        className="w-full h-2 appearance-none cursor-pointer"
         data-testid="input-time-slider"
-        style={{ imageRendering: 'pixelated' }}
+        style={{
+          imageRendering: 'pixelated',
+          background: '#333',
+          border: '1px solid #555',
+        }}
       />
 
       <div className="flex gap-1">
@@ -60,33 +120,42 @@ export function SimulationControls({ currentTime, isPlaying, onPlayPause, onTime
           onClick={() => onTimeChange(0)}
           className="mc-btn-sm flex-1"
           data-testid="button-reset-sim"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px' }}
         >
           RESET
         </button>
         <button
           onClick={onPlayPause}
-          className={`mc-btn-sm flex-1 ${isPlaying ? 'bg-red-700 border-red-500' : 'bg-green-700 border-green-500'}`}
+          className="mc-btn-sm flex-1"
           data-testid="button-play-pause"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px' }}
+          style={{
+            backgroundColor: isPlaying ? '#7a1a1a' : '#1a5c1a',
+            ...(isPlaying
+              ? { boxShadow: 'inset -1px -2px 0px 0px #550000, inset 1px 1px 0px 0px #cc4444' }
+              : { boxShadow: 'inset -1px -2px 0px 0px #003300, inset 1px 1px 0px 0px #44cc44' }
+            ),
+          }}
         >
           {isPlaying ? 'PAUSE' : 'PLAY'}
         </button>
         <button
           onClick={() => onSpeedChange(simSpeed === 1 ? 5 : 1)}
-          className={`mc-btn-sm flex-1 ${simSpeed > 1 ? 'bg-yellow-700 border-yellow-500 text-yellow-200' : ''}`}
+          className="mc-btn-sm flex-1"
           data-testid="button-speed"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px' }}
+          style={simSpeed > 1 ? {
+            backgroundColor: '#6b5c00',
+            color: '#FFFF55',
+            boxShadow: 'inset -1px -2px 0px 0px #4a3d00, inset 1px 1px 0px 0px #ccbb44',
+          } : {}}
         >
           {simSpeed > 1 ? 'x5' : 'x1'}
         </button>
       </div>
 
-      <div className="flex items-center justify-between text-[7px]" style={{ fontFamily: '"Press Start 2P", monospace' }}>
-        <span className={isPlaying ? 'text-green-400' : 'text-gray-500'}>
+      <div className="flex items-center justify-between" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '7px' }}>
+        <span style={{ color: isPlaying ? '#55FF55' : '#666' }}>
           {isPlaying ? 'SIMULATING' : 'READY'}
         </span>
-        <span className="text-blue-300">
+        <span style={{ color: '#4488ff' }}>
           {(rainIntensity * 10).toFixed(1)}mm/hr
         </span>
       </div>

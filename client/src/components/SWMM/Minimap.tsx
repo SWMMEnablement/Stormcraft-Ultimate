@@ -7,6 +7,13 @@ interface MinimapProps {
   steve: SteveState;
 }
 
+const NODE_COLORS: Record<string, string> = {
+  junction: '#9d9d97',
+  outfall: '#00bcd4',
+  storage: '#FF9800',
+  raingauge: '#9C27B0',
+};
+
 export function Minimap({ nodes, links, steve }: MinimapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -16,7 +23,7 @@ export function Minimap({ nodes, links, steve }: MinimapProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = 120;
+    canvas.width = 160;
     canvas.height = 120;
     ctx.imageSmoothingEnabled = false;
 
@@ -43,7 +50,7 @@ export function Minimap({ nodes, links, steve }: MinimapProps) {
       y: (y - minY) * scale + offsetY
     });
 
-    ctx.fillStyle = '#1a1a2e';
+    ctx.fillStyle = '#0a0a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.strokeStyle = '#444';
@@ -63,22 +70,27 @@ export function Minimap({ nodes, links, steve }: MinimapProps) {
 
     nodes.forEach(node => {
       const p = toScreen(node.x, node.y);
-      if (node.type === 'junction') ctx.fillStyle = '#888';
-      else if (node.type === 'outfall') ctx.fillStyle = '#3CB371';
-      else if (node.type === 'storage') ctx.fillStyle = '#DAA520';
-      else ctx.fillStyle = '#9C27B0';
-      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+      ctx.fillStyle = NODE_COLORS[node.type] || '#888';
+      ctx.fillRect(Math.floor(p.x) - 2, Math.floor(p.y) - 2, 4, 4);
     });
 
     const stevePos = toScreen(steve.x, steve.y);
-    ctx.fillStyle = '#00DDAA';
-    ctx.fillRect(stevePos.x - 2, stevePos.y - 2, 4, 4);
+    ctx.fillStyle = '#55FF55';
+    ctx.fillRect(Math.floor(stevePos.x) - 2, Math.floor(stevePos.y) - 2, 4, 4);
 
   }, [nodes, links, steve]);
 
   return (
-    <div className="absolute top-4 right-4 border-2 border-gray-600 bg-black/80 shadow-lg z-20" data-testid="minimap">
-      <canvas ref={canvasRef} className="block" style={{ width: 120, height: 120, imageRendering: 'pixelated' }} />
+    <div
+      className="absolute top-2 right-2 z-20"
+      style={{
+        border: '2px solid #aaa',
+        background: '#0a0a1a',
+        imageRendering: 'pixelated',
+      }}
+      data-testid="minimap"
+    >
+      <canvas ref={canvasRef} className="block" style={{ width: 160, height: 120, imageRendering: 'pixelated' }} />
     </div>
   );
 }

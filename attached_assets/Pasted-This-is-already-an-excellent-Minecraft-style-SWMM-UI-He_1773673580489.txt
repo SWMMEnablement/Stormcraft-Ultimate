@@ -1,0 +1,668 @@
+This is already an excellent Minecraft-style SWMM UI. Here is a complete implementation guide organized by layer, covering everything visible in the screenshot plus deeper system design.
+
+---
+
+## Core Design Principles
+
+The Minecraft aesthetic rests on four pillars:
+
+- **Pixel grid** — everything snaps to an 8px or 16px grid
+- **Chunky pixel font** — no smooth/anti-aliased typography
+- **Block textures** — tiled bitmap-style backgrounds, no gradients
+- **High contrast flat color** — no shadows, no blur, no glassmorphism
+
+---
+
+## 1. Typography
+
+The most impactful single change. Load a pixel font and apply it everywhere:
+
+```css
+/* index.css */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+  --font-pixel: 'Press Start 2P', monospace;
+}
+
+* {
+  font-family: var(--font-pixel) !important;
+  /* Disable anti-aliasing for crisp pixels */
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+```
+
+Use`Press Start 2P` (Google Fonts, free) — this is exactly the font visible in the screenshot for "SWMM CRAFT ULTIMATE" and all labels. Size it small (8-10px) because the font is wide.
+
+---
+
+## 2. Color Palette
+
+```css
+:root {
+  /* Terrain */
+  --mc-grass-light:  #7ec94a;
+  --mc-grass-dark:   #5a9e2f;
+  --mc-stone-light:  #9d9d97;
+  --mc-stone-dark:   #6b6b67;
+  --mc-dirt:         #8B6914;
+  --mc-sand:         #DDD8A0;
+
+  /* UI Chrome */
+  --mc-ui-bg:        #1a1a1a;
+  --mc-ui-panel:     #2a2a2a;
+  --mc-ui-border:    #555555;
+  --mc-ui-border-hi: #aaaaaa;
+
+  /* Minecraft button style */
+  --mc-btn-face:     #8B8B8B;
+  --mc-btn-top:      #C6C6C6;
+  --mc-btn-bottom:   #373737;
+
+  /* SWMM element colors (from screenshot) */
+  --mc-junction:     #9d9d97;   /* gray block */
+  --mc-outfall:      #00bcd4;   /* cyan arrow */
+  --mc-storage:      #FF9800;   /* orange block */
+  --mc-raingage:     #9C27B0;   /* purple block */
+  --mc-conduit:      #555555;   /* dark gray line */
+  --mc-subcatch:     rgba(100,200,100,0.25); /* green overlay */
+
+  /* HUD */
+  --mc-green-text:   #55FF55;
+  --mc-yellow-text:  #FFFF55;
+  --mc-red-text:     #FF5555;
+  --mc-white-text:   #FFFFFF;
+}
+```
+
+---
+
+## 3. Tiled Background — The Grass/Stone Map Grid
+
+The most visually distinctive element. Implement as a CSS tiled background with two alternating tile shades to create the Minecraft checkerboard terrain:
+
+```css
+.map-canvas-background {
+  background-color: var(--mc-grass-dark);
+  background-image:
+    /* Lighter grass tiles at every other position */
+    repeating-conic-gradient(
+      var(--mc-grass-light) 0% 25%,
+      var(--mc-grass-dark)  0% 50%
+    );
+  background-size: 32px 32px;
+  image-rendering: pixelated;
+}
+```
+
+For the stone/paved area where the network sits, overlay a second pattern:
+
+```tsx
+// NetworkArea.tsx — gray paved tiles under the drainage network
+<div
+  className="absolute"
+  style={{
+    backgroundImage: `
+      repeating-conic-gradient(
+        #9d9d97 0% 25%,
+        #8a8a84 0% 50%
+      )
+    `,
+    backgroundSize: "32px 32px",
+    imageRendering: "pixelated",
+    // Subcatchment boundary clips this to the watershed shape
+    clipPath: `polygon(${subcatchmentVertices})`,
+  }}
+/>
+```
+
+---
+
+## 4. Minecraft-Style Buttons
+
+The classic Minecraft button has a 3-layer border: light top-left, dark bottom-right, face color:
+
+```css
+.mc-button {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--mc-white-text);
+  background-color: var(--mc-btn-face);
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  image-rendering: pixelated;
+  text-shadow: 2px 2px #3f3f3f;
+
+  /* The 3-layer Minecraft border effect */
+  box-shadow:
+    inset -2px -4px 0px 0px #373737,   /* dark bottom-right */
+    inset  2px  2px 0px 0px #C6C6C6,   /* light top-left */
+    inset -4px -6px 0px 0px #555555;   /* mid shadow */
+}
+
+.mc-button:hover {
+  background-color: #a0a7ff;  /* Minecraft hover: blue tint */
+  color: var(--mc-yellow-text);
+}
+
+.mc-button:active {
+  /* Pressed: invert shadow direction */
+  box-shadow:
+    inset  2px  4px 0px 0px #373737,
+    inset -2px -2px 0px 0px #C6C6C6,
+    inset  4px  6px 0px 0px #555555;
+  transform: translate(1px, 1px);
+}
+```
+
+Apply to all toolbar buttons: RESET, PLAY, X1, UNDO, REDO, COPY, PASTE, LAYOUT.
+
+---
+
+## 5. Hotbar (Bottom Toolbar — Slot System)
+
+The hotbar in the screenshot is a direct copy of the Minecraft inventory hotbar. This is the tool selector:
+
+```tsx
+// Hotbar.tsx
+const TOOLS = [
+  { slot: 1, icon: "↖", label: "Select",    key: "select" },
+  { slot: 2, icon: "✚", label: "Add Node",  key: "addNode" },
+  { slot: 3, icon: "⬜", label: "Junction",  key: "junction" },
+  { slot: 4, icon: "⬛", label: "Storage",   key: "storage" },
+  { slot: 5, icon: "⬤", label: "Outfall",   key: "outfall" },
+  { slot: 6, icon: "━━", label: "Conduit",   key: "conduit" },
+  { slot: 7, icon: "◆",  label: "Subcatch",  key: "subcatch" },
+  { slot: 8, icon: "🗑", label: "Delete",    key: "delete" },
+  { slot: 9, icon: "◈",  label: "Raingage",  key: "raingage" },
+];
+
+export function Hotbar({ activeTool, onSelect }) {
+  return (
+    <div className="hotbar">
+      {TOOLS.map((tool) => (
+        <div
+          key={tool.slot}
+          className={`hotbar-slot ${activeTool === tool.key ? "active" : ""}`}
+          onClick={() => onSelect(tool.key)}
+          title={tool.label}
+        >
+          <span className="slot-number">{tool.slot}</span>
+          <span className="slot-icon">{tool.icon}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+```css
+.hotbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(0,0,0,0.7);
+  border: 2px solid var(--mc-ui-border-hi);
+  border-bottom: none;
+}
+
+.hotbar-slot {
+  width: 52px;
+  height: 52px;
+  background: var(--mc-ui-panel);
+  border: 2px solid var(--mc-ui-border);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* Pixelated inner border */
+  box-shadow: inset 1px 1px 0 #555, inset -1px -1px 0 #000;
+}
+
+.hotbar-slot.active {
+  border-color: var(--mc-white-text);
+  box-shadow: inset 1px 1px 0 #888, inset -1px -1px 0 #000,
+              0 0 0 2px var(--mc-white-text);
+}
+
+.slot-number {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: var(--mc-white-text);
+  text-shadow: 1px 1px #000;
+}
+```
+
+---
+
+## 6. HUD Clock & Rain Panel (Top-Left)
+
+```tsx
+// HUDPanel.tsx — matches the 24:00 / RAIN panel in screenshot
+<div className="hud-panel">
+  {/* Digital clock display */}
+  <div className="hud-clock">
+    <span className="clock-time">{timeDisplay}</span>
+  </div>
+
+  {/* Rain bar */}
+  <div className="hud-rain-label">RAIN</div>
+  <div className="hud-rain-bar">
+    <div
+      className="hud-rain-fill"
+      style={{ width: `${rainIntensity}%` }}
+    />
+    <div className="hud-rain-indicator" style={{ left: `${rainIntensity}%` }}>
+      <div className="rain-dot" />  {/* red circle */}
+    </div>
+  </div>
+
+  {/* Control buttons */}
+  <div className="hud-controls">
+    <button className="mc-button">RESET</button>
+    <button className="mc-button">PLAY</button>
+    <button className="mc-button">X1</button>
+  </div>
+
+  <div className="hud-status">
+    <span className="text-green">READY</span>
+    <span className="text-green">{rainfall}mm/hr</span>
+  </div>
+</div>
+```
+```css
+.hud-panel {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.85);
+  border: 2px solid var(--mc-ui-border);
+  padding: 8px;
+  font-family: var(--font-pixel);
+  min-width: 200px;
+}
+
+.hud-clock {
+  background: #000;
+  border: 2px inset var(--mc-ui-border);
+  text-align: center;
+  padding: 4px;
+  margin-bottom: 6px;
+}
+
+.clock-time {
+  font-size: 20px;
+  color: var(--mc-green-text);
+  text-shadow: 0 0 8px #00ff00;
+  letter-spacing: 4px;
+}
+
+.hud-rain-bar {
+  height: 8px;
+  background: #333;
+  border: 1px solid #666;
+  margin: 4px 0;
+  position: relative;
+}
+
+.hud-rain-fill {
+  height: 100%;
+  background: #4488ff;
+}
+
+.rain-dot {
+  width: 8px;
+  height: 8px;
+  background: #ff3333;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+}
+```
+
+---
+
+## 7. Network Node Rendering — Pixel Block Style
+
+Render each SWMM element as a pixelated block sprite rather than a smooth circle or SVG icon:
+
+```tsx
+// Node types as pixel art CSS blocks
+const NODE_STYLES = {
+  junction: {
+    width: 16, height: 16,
+    background: `
+      linear-gradient(135deg,
+        #aaa 0%, #aaa 50%,
+        #666 50%, #666 100%
+      )
+    `,
+    border: "2px solid #333",
+    imageRendering: "pixelated",
+  },
+  storage: {
+    width: 20, height: 20,
+    background: "#FF9800",
+    border: "2px solid #E65100",
+    boxShadow: "2px 2px 0 #BF360C",
+  },
+  outfall: {
+    width: 16, height: 16,
+    background: "#00bcd4",
+    border: "2px solid #006064",
+    clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)",  // triangle
+  },
+  raingage: {
+    width: 16, height: 16,
+    background: "#9C27B0",
+    border: "2px solid #4A148C",
+  },
+};
+```
+
+For the sleeping engineer character visible in the screenshot, use a simple CSS pixel-art sprite:
+
+```tsx
+// EngineerSprite.tsx — the "Zzz" character
+export function EngineerSprite({ message }: { message: string }) {
+  return (
+    <div className="engineer-container">
+      {/* Speech bubble */}
+      {message && (
+        <div className="speech-bubble">
+          <p>{message}</p>
+          <div className="bubble-tail" />
+        </div>
+      )}
+      {/* Pixel art character - CSS only */}
+      <div className="engineer-sprite">
+        <div className="sprite-head" />
+        <div className="sprite-hardhat" />
+        <div className="sprite-body" />
+        <div className="sprite-legs" />
+      </div>
+    </div>
+  );
+}
+```
+```css
+.speech-bubble {
+  position: absolute;
+  bottom: 110%;
+  left: -80px;
+  width: 180px;
+  background: #f0f0f0;
+  border: 3px solid #333;
+  padding: 10px;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  line-height: 1.6;
+  color: #222;
+  image-rendering: pixelated;
+}
+
+.speech-bubble::after {
+  content: "▼";
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #333;
+  font-size: 14px;
+}
+```
+
+---
+
+## 8. Minimap (Top-Right)
+
+The minimap in the screenshot uses colored pixel dots on a dark background:
+
+```tsx
+// Minimap.tsx
+export function Minimap({ nodes, links, viewport }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#0a0a1a";
+    ctx.fillRect(0, 0, 160, 120);
+
+    // Draw nodes as 2x2 pixel blocks
+    nodes.forEach((node) => {
+      const mx = (node.x / worldWidth) * 160;
+      const my = (node.y / worldHeight) * 120;
+      ctx.fillStyle = NODE_COLORS[node.type];
+      ctx.fillRect(Math.floor(mx), Math.floor(my), 2, 2);
+    });
+
+    // Draw viewport rectangle
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(
+      (viewport.x / worldWidth) * 160,
+      (viewport.y / worldHeight) * 120,
+      (viewport.w / worldWidth) * 160,
+      (viewport.h / worldHeight) * 120
+    );
+  }, [nodes, links, viewport]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={160} height={120}
+      className="minimap-canvas"
+    />
+  );
+}
+```
+```css
+.minimap-canvas {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 2px solid var(--mc-ui-border-hi);
+  background: #0a0a1a;
+  image-rendering: pixelated;
+}
+```
+
+---
+
+## 9. Tab Bar (Top Center)
+
+The PROJECTS / DEMOS / IMPORT / CHALLENGE tabs use the Minecraft inventory tab style:
+
+```css
+.mc-tab {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  padding: 8px 16px;
+  background: var(--mc-btn-face);
+  color: #fff;
+  text-shadow: 1px 1px #000;
+  border: 2px solid var(--mc-ui-border-hi);
+  border-bottom: none;
+  margin-right: 2px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mc-tab.active {
+  background: #c6c6c6;
+  color: #222;
+  text-shadow: none;
+  /* Tab pops forward */
+  transform: translateY(-2px);
+  border-color: #fff;
+}
+
+.mc-tab.disabled {
+  color: #555;
+  background: #444;
+  cursor: not-allowed;
+}
+```
+
+---
+
+## 10. Subcatchment Overlay
+
+The green dashed subcatchment boundary in the screenshot:
+
+```css
+.subcatchment-polygon {
+  fill: rgba(100, 200, 80, 0.15);
+  stroke: #7ec94a;
+  stroke-width: 2;
+  stroke-dasharray: 8 4;   /* dashed border */
+  image-rendering: pixelated;
+}
+```
+
+For the pixel-art feel, snap all subcatchment vertices to the 32px grid:
+
+```ts
+function snapToGrid(vertices: Point[], gridSize = 32): Point[] {
+  return vertices.map((v) => ({
+    x: Math.round(v.x / gridSize) * gridSize,
+    y: Math.round(v.y / gridSize) * gridSize,
+  }));
+}
+```
+
+---
+
+## 11. Complete CSS Theme File
+
+```css
+/* minecraft-swmm-theme.css */
+
+/* 1. Pixel font everywhere */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+  font-family: 'Press Start 2P', monospace;
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+  box-sizing: border-box;
+}
+
+/* 2. Main canvas — grass tiles */
+.map-viewport {
+  background-color: #5a9e2f;
+  background-image: repeating-conic-gradient(
+    #7ec94a 0% 25%, #5a9e2f 0% 50%
+  );
+  background-size: 32px 32px;
+  cursor: crosshair;
+}
+
+/* 3. Network area — stone tiles */
+.network-area {
+  background-color: #8a8a84;
+  background-image: repeating-conic-gradient(
+    #9d9d97 0% 25%, #8a8a84 0% 50%
+  );
+  background-size: 32px 32px;
+}
+
+/* 4. Conduit lines */
+.conduit-line {
+  stroke: #444;
+  stroke-width: 4;
+  stroke-linecap: square;  /* pixelated line ends */
+}
+
+.conduit-line.flooding {
+  stroke: #ff4444;
+  animation: flood-pulse 0.5s infinite alternate;
+}
+
+@keyframes flood-pulse {
+  from { stroke: #ff4444; }
+  to   { stroke: #ff8800; }
+}
+
+/* 5. Node labels */
+.node-label {
+  font-size: 7px;
+  fill: #ffffff;
+  text-shadow: 1px 1px #000000;
+  dominant-baseline: middle;
+}
+
+/* 6. Depth numbers on storage/junction */
+.depth-value {
+  font-size: 8px;
+  color: var(--mc-yellow-text);
+  text-shadow: 1px 1px #000;
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* 7. Scrollbars */
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: #2a2a2a; }
+::-webkit-scrollbar-thumb {
+  background: #666;
+  border: 2px solid #333;
+}
+```
+
+---
+
+## 12. Animation — Water Flow in Conduits
+
+```ts
+// Animate dashes along conduits to show flow direction
+function animateFlowArrows(ctx: CanvasRenderingContext2D, conduit, flowRate) {
+  const speed = flowRate * 0.1;  // pixels per frame
+  const dashOffset = (Date.now() * speed / 1000) % 16;
+
+  ctx.setLineDash([8, 8]);
+  ctx.lineDashOffset = -dashOffset;
+  ctx.strokeStyle = flowRate > 0 ? "#4488ff" : "#ff4444";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(conduit.x1, conduit.y1);
+  ctx.lineTo(conduit.x2, conduit.y2);
+  ctx.stroke();
+
+  ctx.setLineDash([]);  // reset
+}
+```
+
+---
+
+## Summary: What Makes It Look Like Minecraft
+
+| Element | Implementation |
+| --- | --- |
+| Font | Press Start 2P, 8-10px, no antialiasing |
+| Background | 32px repeating-conic-gradient tiles |
+| Buttons | 3-layer box-shadow border, hover = blue tint |
+| Hotbar | Fixed bottom, numbered slots, white border on active |
+| Nodes | 16px colored squares with hard pixel borders |
+| Labels | White text + 1px black text-shadow |
+| HUD | Dark panel, green monospace clock, rain bar |
+| Minimap | Canvas with 2px colored dots |
+| Speech bubble | Flat gray box, pixel font, CSS triangle tail |
+| Conduits |`stroke-linecap: square`, animated dash flow |
+| Subcatchments | Dashed green polygon, snapped to 32px grid |

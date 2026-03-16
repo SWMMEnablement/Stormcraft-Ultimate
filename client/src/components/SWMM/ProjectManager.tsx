@@ -49,33 +49,61 @@ export function ProjectManager({ currentModel, onLoadProject }: ProjectManagerPr
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="mc-btn" data-testid="button-projects">
-          <FolderOpen className="h-4 w-4 inline mr-1" />
+        <button className="mc-btn-sm" data-testid="button-projects">
           PROJECTS
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl bg-gray-200 border-4 border-white border-b-gray-700 border-r-gray-700">
+      <DialogContent
+        className="max-w-2xl text-white"
+        style={{
+          background: 'rgba(0,0,0,0.95)',
+          border: '2px solid #555',
+          imageRendering: 'pixelated',
+        }}
+      >
         <DialogHeader>
-          <DialogTitle className="font-sans text-xl">Project Manager</DialogTitle>
+          <DialogTitle
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: '14px',
+              color: '#FFFF55',
+            }}
+          >
+            PROJECT MANAGER
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Save Current */}
-          <div className="mc-panel p-3">
-            <h3 className="font-sans text-sm font-bold mb-2">Save Current Project</h3>
+          <div
+            className="p-3"
+            style={{ border: '2px solid #555', background: '#1a1a1a' }}
+          >
+            <h3
+              className="mb-2"
+              style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px', color: '#aaa' }}
+            >
+              SAVE CURRENT
+            </h3>
             <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="Project name..."
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                className="mc-input flex-1"
+                className="flex-1 px-2 py-1 outline-none"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  fontSize: '8px',
+                  background: '#000',
+                  border: '2px inset #555',
+                  color: '#55FF55',
+                }}
                 data-testid="input-project-name"
               />
               <button
                 onClick={() => projectName && saveMutation.mutate(projectName)}
                 disabled={!projectName || saveMutation.isPending}
-                className="mc-btn mc-btn-primary"
+                className="mc-btn-sm mc-btn-primary-sm"
                 data-testid="button-save"
               >
                 SAVE
@@ -83,31 +111,51 @@ export function ProjectManager({ currentModel, onLoadProject }: ProjectManagerPr
             </div>
           </div>
 
-          {/* Load Existing */}
-          <div className="mc-panel p-3">
-            <h3 className="font-sans text-sm font-bold mb-2">Saved Projects</h3>
+          <div
+            className="p-3"
+            style={{ border: '2px solid #555', background: '#1a1a1a' }}
+          >
+            <h3
+              className="mb-2"
+              style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px', color: '#aaa' }}
+            >
+              SAVED WORLDS
+            </h3>
             <div className="max-h-64 overflow-y-auto space-y-2">
               {projects.length === 0 ? (
-                <p className="text-gray-600 text-sm">No saved projects yet</p>
+                <p style={{ fontFamily: 'VT323, monospace', fontSize: '14px', color: '#666' }}>
+                  No saved projects yet
+                </p>
               ) : (
                 projects.map((project) => (
                   <div
                     key={project.id}
-                    className="flex items-center justify-between bg-gray-300 p-2 border-2 border-gray-400"
+                    className="flex items-center justify-between p-2"
+                    style={{ background: '#2a2a2a', border: '2px solid #444' }}
                     data-testid={`project-${project.id}`}
                   >
                     <div className="flex-1 cursor-pointer" onClick={() => loadProject(project)}>
-                      <div className="font-sans font-bold">{project.name}</div>
-                      <div className="text-xs text-gray-600">
+                      <div
+                        style={{
+                          fontFamily: '"Press Start 2P", monospace',
+                          fontSize: '8px',
+                          color: '#fff',
+                          textShadow: '1px 1px 0 #000',
+                        }}
+                      >
+                        {project.name}
+                      </div>
+                      <div style={{ fontFamily: 'VT323, monospace', fontSize: '12px', color: '#666' }}>
                         {new Date(project.updatedAt).toLocaleDateString()}
                       </div>
                     </div>
                     <button
                       onClick={() => deleteMutation.mutate(project.id)}
-                      className="mc-btn mc-btn-danger p-2"
+                      className="mc-btn-sm"
+                      style={{ backgroundColor: '#7a1a1a' }}
                       data-testid={`button-delete-${project.id}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3 w-3" />
                     </button>
                   </div>
                 ))
