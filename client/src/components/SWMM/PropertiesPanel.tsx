@@ -66,16 +66,29 @@ export function PropertiesPanel({ selectedElement, onUpdate }: PropertiesPanelPr
         )}
 
         {'roughness' in selectedElement && (
-           <div className="flex flex-col gap-1">
-            <label className="font-sans text-[10px] text-gray-600">Roughness</label>
-            <input 
-              className="mc-input text-sm"
-              type="number"
-              step="0.001"
-              value={(selectedElement as Link).roughness}
-              onChange={(e) => handleChange('roughness', e.target.value)}
-            />
-          </div>
+          <>
+            <div className="flex flex-col gap-1">
+              <label className="font-sans text-[10px] text-gray-600">Diameter (ft)</label>
+              <input 
+                data-testid="input-diameter"
+                className="mc-input text-sm"
+                type="number"
+                step="0.25"
+                value={(selectedElement as Link).diameter}
+                onChange={(e) => handleChange('diameter', e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="font-sans text-[10px] text-gray-600">Roughness</label>
+              <input 
+                className="mc-input text-sm"
+                type="number"
+                step="0.001"
+                value={(selectedElement as Link).roughness}
+                onChange={(e) => handleChange('roughness', e.target.value)}
+              />
+            </div>
+          </>
         )}
         
         {'area' in selectedElement && (

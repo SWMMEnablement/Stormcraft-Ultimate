@@ -97,9 +97,19 @@ export function parseInpFile(content: string): SWMMState {
             toNode: parts[2],
             length: parseFloat(parts[3]) || 100,
             roughness: parseFloat(parts[4]) || 0.013,
+            diameter: 1.5,
             flow: 0,
             capacity: 10,
           });
+        }
+        break;
+        
+      case 'XSECTIONS':
+        if (parts.length >= 2) {
+          const link = links.find(l => l.id === parts[0]);
+          if (link) {
+            link.diameter = parseFloat(parts[2]) || 1.5;
+          }
         }
         break;
         

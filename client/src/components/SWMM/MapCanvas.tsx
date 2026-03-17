@@ -648,6 +648,7 @@ export function MapCanvas({
             toNode: hitNode.id,
             length: Math.hypot(hitNode.x - nodes.find(n => n.id === pendingLinkStart)!.x, hitNode.y - nodes.find(n => n.id === pendingLinkStart)!.y),
             roughness: 0.013,
+            diameter: 1.5,
             flow: 0,
             capacity: 10
           };

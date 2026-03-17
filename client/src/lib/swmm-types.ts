@@ -25,6 +25,7 @@ export interface Link {
   toNode: string;
   length: number;
   roughness: number;
+  diameter: number;
   flow: number; // Current simulation flow
   capacity: number;
 }

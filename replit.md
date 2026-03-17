@@ -2,7 +2,7 @@
 
 ## Overview
 
-SWMMCRAFT Ultimate is a web-based SWMM (Storm Water Management Model) visualization and simulation tool with a Minecraft-inspired pixel art aesthetic. It allows users to design drainage networks by placing nodes (junctions, outfalls, storage units, rain gauges), connecting them with conduits, and running simplified hydrological simulations. The app features a guided tutorial with an animated "Steve" character, challenge levels with budget constraints, project save/load via a database, and import/export of standard SWMM `.inp` files.
+SWMMCRAFT Ultimate is a web-based SWMM (Storm Water Management Model) visualization and simulation tool with a Minecraft-inspired pixel art aesthetic. It allows users to design drainage networks by placing nodes (junctions, outfalls, storage units, rain gauges), connecting them with conduits, and running hydraulic simulations using a real Manning's equation-based routing engine. The app features a guided tutorial with an animated "Steve" character, challenge levels with budget constraints, project save/load via a database, and import/export of standard SWMM `.inp` files.
 
 ## User Preferences
 
@@ -25,8 +25,9 @@ Preferred communication style: Simple, everyday language.
 - `client/src/lib/tutorial.ts` — Step-by-step tutorial system
 - `client/src/lib/budget.ts` — Budget tracking and cost calculations for challenge mode
 - `client/src/lib/challenges.ts` — Challenge level definitions with increasing difficulty
-- `client/src/lib/inp-parser.ts` — Parser for SWMM `.inp` file format
-- `client/src/lib/swmm-export.ts` — Generator for SWMM `.inp` file export
+- `client/src/lib/swmm-engine.ts` — Real hydraulic simulation engine with Manning's equation, topological routing, and kinematic wave approximation
+- `client/src/lib/inp-parser.ts` — Parser for SWMM `.inp` file format (including XSECTIONS for pipe diameters)
+- `client/src/lib/swmm-export.ts` — Generator for SWMM `.inp` file export (with proper XSECTIONS diameter export)
 - `client/src/lib/api.ts` — Typed fetch wrappers for the REST API
 - `client/src/lib/sound.ts` — Web Audio synthesized sound effects
 

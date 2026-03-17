@@ -95,7 +95,8 @@ export function generateInpFile(model: SWMMState, title: string = 'SWMMCRAFT Exp
     lines.push(';;Link           Shape        Geom1            Geom2      Geom3      Geom4      Barrels    Culvert');
     lines.push(';;-------------- ------------ ---------------- ---------- ---------- ---------- ---------- ----------');
     conduits.forEach(c => {
-      lines.push(`${c.id.padEnd(17)}CIRCULAR     2${' '.repeat(16)}0${' '.repeat(10)}0${' '.repeat(10)}0${' '.repeat(10)}1`);
+      const diam = (c.diameter || 1.5).toFixed(2);
+      lines.push(`${c.id.padEnd(17)}CIRCULAR     ${diam.padEnd(17)}0${' '.repeat(10)}0${' '.repeat(10)}0${' '.repeat(10)}1`);
     });
     lines.push('');
   }

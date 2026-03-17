@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/SWMM/Header';
 import { Toolbar } from '@/components/SWMM/Toolbar';
 import { PropertiesPanel } from '@/components/SWMM/PropertiesPanel';
@@ -19,6 +19,7 @@ import { ChallengeLevel } from '@/lib/challenges';
 import { downloadInpFile } from '@/lib/swmm-export';
 import { DemoOverlay } from '@/components/SWMM/DemoOverlay';
 import { DemoModelPicker } from '@/components/SWMM/DemoModelPicker';
+import { SwmmEngine, applySimStepToModel } from '@/lib/swmm-engine';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export default function Home() {
@@ -110,55 +111,61 @@ export default function Home() {
     return () => clearInterval(steveInterval);
   }, [model.nodes, model.links, isPlaying, simTime]);
 
-  // Simulation Loop
+  const engineRef = useRef<SwmmEngine | null>(null);
+  const simTimeRef = useRef(0);
+
+  useEffect(() => {
+    simTimeRef.current = simTime;
+  }, [simTime]);
+
+  const initEngine = useCallback(() => {
+    const intensity = challenge ? challenge.stormIntensity : 2.0;
+    engineRef.current = new SwmmEngine(model, {
+      stormIntensityPeak: intensity,
+      stormPeakHour: 6,
+      stormDuration: 12,
+    });
+  }, [challenge]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isPlaying) {
+      if (!engineRef.current) {
+        initEngine();
+      }
       interval = setInterval(() => {
-        setSimTime(prev => {
-          const next = prev + (0.1 * simSpeed);
-          if (next > 24) {
-            setIsPlaying(false);
-            setSteve(s => ({ ...s, action: 'celebrating' as const, speech: "Storm's over! Let's see how we did!" }));
-            return 24;
+        const currentTime = simTimeRef.current;
+        const dt = 0.1 * simSpeed;
+        const nextTime = currentTime + dt;
+
+        if (nextTime > 24) {
+          setIsPlaying(false);
+          const flooding = engineRef.current?.getTotalFlooding() || 0;
+          const floodMsg = flooding > 0
+            ? `Storm's over! Total flooding: ${flooding.toFixed(1)} ft³. Let's improve the design!`
+            : "Storm's over! No flooding — great engineering!";
+          setSteve(s => ({ ...s, action: 'celebrating' as const, speech: floodMsg }));
+          setSimTime(24);
+          return;
+        }
+
+        if (engineRef.current) {
+          const subSteps = 5;
+          const subDt = dt / subSteps;
+          let lastStep;
+          for (let i = 0; i < subSteps; i++) {
+            lastStep = engineRef.current.step(currentTime + subDt * i, subDt * 3600);
           }
-          return next;
-        });
+          if (lastStep) {
+            setModel(prev => applySimStepToModel(prev, lastStep));
+          }
+        }
 
-        setModel(prev => {
-          const intensity = challenge ? challenge.stormIntensity : 0.5;
-          const newNodes = prev.nodes.map(n => {
-            const stormPeak = 6;
-            const dist = Math.abs(simTime - stormPeak);
-            const rainIntensity = Math.max(0, intensity * Math.exp(-dist * 0.3));
-            const upstreamLinks = prev.links.filter(l => l.toNode === n.id);
-            const upstreamFlow = upstreamLinks.reduce((sum, l) => sum + l.flow, 0);
-            const inflow = rainIntensity * 2 + upstreamFlow * 0.3;
-            const downstreamLinks = prev.links.filter(l => l.fromNode === n.id);
-            const outflow = downstreamLinks.length > 0 ? n.depth * 0.5 : n.depth * 0.1;
-            const newDepth = Math.max(0, n.depth + (inflow - outflow) * 0.05);
-            return { 
-              ...n, 
-              depth: newDepth,
-              isSurcharged: n.maxDepth > 0 && newDepth >= n.maxDepth,
-            };
-          });
-          
-          const newLinks = prev.links.map(l => {
-            const upNode = newNodes.find(n => n.id === l.fromNode);
-            return {
-              ...l,
-              flow: upNode ? Math.max(0, upNode.depth * 1.5) : 0
-            };
-          });
-
-          return { ...prev, nodes: newNodes, links: newLinks };
-        });
-
+        setSimTime(nextTime);
       }, 100);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, simSpeed, simTime, challenge]);
+  }, [isPlaying, simSpeed, initEngine]);
 
   const handleAddNode = useCallback((n: Node) => {
     setModel(prev => ({...prev, nodes: [...prev.nodes, n]}));
@@ -177,6 +184,16 @@ export default function Home() {
   const handlePlayPause = useCallback(() => {
     setIsPlaying(prev => {
       if (!prev) {
+        if (simTimeRef.current >= 24) {
+          setSimTime(0);
+          simTimeRef.current = 0;
+          engineRef.current = null;
+          setModel(m => ({
+            ...m,
+            nodes: m.nodes.map(n => ({ ...n, depth: 0, isSurcharged: false })),
+            links: m.links.map(l => ({ ...l, flow: 0 })),
+          }));
+        }
         setTutorial(t => advanceTutorial(t, 'sim_started'));
       }
       return !prev;
