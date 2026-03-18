@@ -330,7 +330,8 @@ function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean, minElev:
   const len = dir.length();
   if (len === 0) return group;
 
-  const pipeSize = Math.max(link.diameter * ELEV_SCALE * 1.2, 0.8);
+  const diam = link.diameter ?? 1.0;
+  const pipeSize = Math.max(diam * ELEV_SCALE * 1.2, 0.8);
   const segments = Math.max(1, Math.ceil(len / BLOCK));
 
   const avgElev = (fromNode.invertElev + toNode.invertElev) / 2;
@@ -371,7 +372,7 @@ function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean, minElev:
     lctx.font = '12px monospace';
     lctx.fillStyle = '#AADDFF';
     lctx.textAlign = 'center';
-    lctx.fillText(`\u00D8${link.diameter.toFixed(1)}ft`, 64, 22);
+    lctx.fillText(`\u00D8${diam.toFixed(1)}ft`, 64, 22);
     const tex = new THREE.CanvasTexture(labelCanvas);
     const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
     const sprite = new THREE.Sprite(spriteMat);
@@ -404,7 +405,7 @@ function createWaterMesh(link: Link, nodes: Node[]): THREE.Mesh | null {
   const len = from.distanceTo(to);
   if (len === 0) return null;
 
-  const pipeSize = Math.max(link.diameter * ELEV_SCALE * 0.8, 0.6);
+  const pipeSize = Math.max((link.diameter ?? 1.0) * ELEV_SCALE * 0.8, 0.6);
   const fillRatio = Math.min(link.flow / Math.max(link.capacity, 0.01), 1.0);
   const waterHeight = pipeSize * fillRatio * 0.8;
 
