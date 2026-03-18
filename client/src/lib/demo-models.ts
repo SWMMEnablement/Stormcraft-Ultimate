@@ -2,6 +2,9 @@ import { SWMMState } from './swmm-types';
 import greenvilleModel from './greenville-model.json';
 import user1Model from './user1-model.json';
 import user2Model from './user2-model.json';
+import user3Model from './user3-model.json';
+import user4Model from './user4-model.json';
+import user5Model from './user5-model.json';
 
 export interface DemoModel {
   id: string;
@@ -256,5 +259,35 @@ export const DEMO_MODELS: DemoModel[] = [
     nodeCount: 72,
     linkCount: 102,
     model: user2Model as SWMMState,
+  },
+  {
+    id: 'user3-dual-drainage',
+    name: 'Dual Drainage Network',
+    description: 'Complex dual drainage system with 141 nodes, 134 conduits, and 168 subcatchments. Models parallel surface and sewer systems with extensive catchment coverage.',
+    emoji: '🔄',
+    difficulty: 'Advanced',
+    nodeCount: 141,
+    linkCount: 134,
+    model: user3Model as SWMMState,
+  },
+  {
+    id: 'user4-metro-area',
+    name: 'Metro Stormwater Grid',
+    description: 'Large metropolitan stormwater model with 209 nodes, 209 links, and 112 subcatchments. Comprehensive urban drainage with varied land use.',
+    emoji: '🏗️',
+    difficulty: 'Advanced',
+    nodeCount: 209,
+    linkCount: 209,
+    model: user4Model as SWMMState,
+  },
+  {
+    id: 'user5-river-basin',
+    name: 'River Basin Collection',
+    description: 'Extensive river basin collection system with 200 nodes and 276 links. Dense pipe network ideal for testing hydraulic routing and surcharge conditions.',
+    emoji: '🏞️',
+    difficulty: 'Advanced',
+    nodeCount: 200,
+    linkCount: 276,
+    model: user5Model as SWMMState,
   },
 ];
