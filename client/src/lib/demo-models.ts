@@ -1,5 +1,7 @@
 import { SWMMState } from './swmm-types';
 import greenvilleModel from './greenville-model.json';
+import user1Model from './user1-model.json';
+import user2Model from './user2-model.json';
 
 export interface DemoModel {
   id: string;
@@ -234,5 +236,25 @@ export const DEMO_MODELS: DemoModel[] = [
     nodeCount: 172,
     linkCount: 223,
     model: greenvilleModel as SWMMState,
+  },
+  {
+    id: 'user1-dynwave',
+    name: 'Urban Hillside Grid',
+    description: 'Dynamic wave routing model with 60 junctions and 59 conduits on steep terrain. Great for testing surcharge and backwater effects in hilly urban areas.',
+    emoji: '⛰️',
+    difficulty: 'Intermediate',
+    nodeCount: 60,
+    linkCount: 59,
+    model: user1Model as SWMMState,
+  },
+  {
+    id: 'user2-watershed',
+    name: 'Twin Watershed System',
+    description: 'Large watershed model with 72 nodes, 102 links, 21 storage units, weirs, and 17 subcatchments. Demonstrates detention basins, flow control, and complex routing.',
+    emoji: '🌊',
+    difficulty: 'Advanced',
+    nodeCount: 72,
+    linkCount: 102,
+    model: user2Model as SWMMState,
   },
 ];
