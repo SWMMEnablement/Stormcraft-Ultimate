@@ -202,28 +202,41 @@ function createTerrainChunk(nodes: Node[], links: Link[]): THREE.Group {
   return group;
 }
 
-function createJunctionMesh(node: Node, isSelected: boolean): THREE.Group {
+function elevToColor(elev: number, minElev: number, maxElev: number): THREE.Color {
+  const range = maxElev - minElev;
+  const t = range > 0 ? (elev - minElev) / range : 0.5;
+  if (t < 0.25) {
+    return new THREE.Color().lerpColors(new THREE.Color(0x2244CC), new THREE.Color(0x22AADD), t / 0.25);
+  } else if (t < 0.5) {
+    return new THREE.Color().lerpColors(new THREE.Color(0x22AADD), new THREE.Color(0x44CC44), (t - 0.25) / 0.25);
+  } else if (t < 0.75) {
+    return new THREE.Color().lerpColors(new THREE.Color(0x44CC44), new THREE.Color(0xEEBB33), (t - 0.5) / 0.25);
+  } else {
+    return new THREE.Color().lerpColors(new THREE.Color(0xEEBB33), new THREE.Color(0xDD3333), (t - 0.75) / 0.25);
+  }
+}
+
+function createJunctionMesh(node: Node, isSelected: boolean, minElev: number, maxElev: number): THREE.Group {
   const group = new THREE.Group();
   const gx = node.x * SCALE;
   const gz = node.y * SCALE;
   const baseY = node.invertElev * ELEV_SCALE;
 
-  let wallColor = COLORS.junctionBrick;
-  let topColor = COLORS.junctionGrate;
-  let accentColor = COLORS.junction;
+  const elevColor = elevToColor(node.invertElev, minElev, maxElev);
+  const elevColorHex = elevColor.getHex();
+  const elevDarker = elevColor.clone().multiplyScalar(0.7);
+  const elevLighter = elevColor.clone().lerp(new THREE.Color(0xFFFFFF), 0.3);
+
+  let wallColor = elevColorHex;
+  let topColor = elevLighter.getHex();
+  let accentColor = elevDarker.getHex();
 
   if (node.type === 'outfall') {
-    wallColor = COLORS.outfall;
     topColor = COLORS.outfallAccent;
-    accentColor = 0xCC6622;
   } else if (node.type === 'storage') {
-    wallColor = COLORS.storage;
     topColor = COLORS.storageAccent;
-    accentColor = 0x3377AA;
   } else if (node.type === 'raingauge') {
-    wallColor = 0x4488CC;
     topColor = 0x66AAEE;
-    accentColor = 0x3377BB;
   }
 
   if (isSelected) {
@@ -274,10 +287,29 @@ function createJunctionMesh(node: Node, isSelected: boolean): THREE.Group {
     group.add(funnel);
   }
 
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 128;
+  labelCanvas.height = 32;
+  const lctx = labelCanvas.getContext('2d');
+  if (lctx) {
+    lctx.fillStyle = 'rgba(0,0,0,0.7)';
+    lctx.fillRect(0, 0, 128, 32);
+    lctx.font = '14px monospace';
+    lctx.fillStyle = '#FFFFFF';
+    lctx.textAlign = 'center';
+    lctx.fillText(`EL ${node.invertElev.toFixed(1)}`, 64, 22);
+    const tex = new THREE.CanvasTexture(labelCanvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.position.set(gx, baseY + height + 1.2, gz);
+    sprite.scale.set(2.5, 0.6, 1);
+    group.add(sprite);
+  }
+
   return group;
 }
 
-function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean): THREE.Group {
+function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean, minElev: number, maxElev: number): THREE.Group {
   const group = new THREE.Group();
   const fromNode = nodes.find(n => n.id === link.fromNode);
   const toNode = nodes.find(n => n.id === link.toNode);
@@ -298,10 +330,13 @@ function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean): THREE.G
   const len = dir.length();
   if (len === 0) return group;
 
-  const pipeSize = Math.max(link.diameter * ELEV_SCALE * 0.8, 0.6);
+  const pipeSize = Math.max(link.diameter * ELEV_SCALE * 1.2, 0.8);
   const segments = Math.max(1, Math.ceil(len / BLOCK));
-  const color = isSelected ? COLORS.selected : COLORS.pipe;
-  const rivetColor = isSelected ? COLORS.selectedGlow : COLORS.pipeRivet;
+
+  const avgElev = (fromNode.invertElev + toNode.invertElev) / 2;
+  const pipeElevColor = isSelected ? new THREE.Color(COLORS.selected) : elevToColor(avgElev, minElev, maxElev).multiplyScalar(0.6);
+  const color = pipeElevColor.getHex();
+  const rivetColor = isSelected ? COLORS.selectedGlow : pipeElevColor.clone().lerp(new THREE.Color(0xFFFFFF), 0.4).getHex();
 
   for (let i = 0; i < segments; i++) {
     const t = (i + 0.5) / segments;
@@ -309,7 +344,7 @@ function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean): THREE.G
     const segLen = len / segments;
 
     const geo = new THREE.BoxGeometry(pipeSize, pipeSize, segLen * 1.02);
-    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.2 });
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.25 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.copy(pos);
     mesh.lookAt(to);
@@ -318,14 +353,33 @@ function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean): THREE.G
     mesh.userData = { linkId: link.id };
     group.add(mesh);
 
-    if (i % 2 === 0) {
-      const rivetGeo = new THREE.BoxGeometry(pipeSize + 0.15, pipeSize + 0.15, 0.1);
-      const rivetMat = new THREE.MeshStandardMaterial({ color: rivetColor, roughness: 0.4, metalness: 0.4 });
-      const rivet = new THREE.Mesh(rivetGeo, rivetMat);
-      rivet.position.copy(pos);
-      rivet.lookAt(to);
-      group.add(rivet);
-    }
+    const rivetGeo = new THREE.BoxGeometry(pipeSize + 0.2, pipeSize + 0.2, 0.12);
+    const rivetMat = new THREE.MeshStandardMaterial({ color: rivetColor, roughness: 0.3, metalness: 0.5 });
+    const rivet = new THREE.Mesh(rivetGeo, rivetMat);
+    rivet.position.copy(pos);
+    rivet.lookAt(to);
+    group.add(rivet);
+  }
+
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 128;
+  labelCanvas.height = 32;
+  const lctx = labelCanvas.getContext('2d');
+  if (lctx) {
+    lctx.fillStyle = 'rgba(0,0,0,0.6)';
+    lctx.fillRect(0, 0, 128, 32);
+    lctx.font = '12px monospace';
+    lctx.fillStyle = '#AADDFF';
+    lctx.textAlign = 'center';
+    lctx.fillText(`\u00D8${link.diameter.toFixed(1)}ft`, 64, 22);
+    const tex = new THREE.CanvasTexture(labelCanvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    const sprite = new THREE.Sprite(spriteMat);
+    const mid = from.clone().lerp(to, 0.5);
+    sprite.position.copy(mid);
+    sprite.position.y += pipeSize + 0.8;
+    sprite.scale.set(2, 0.5, 1);
+    group.add(sprite);
   }
 
   return group;
@@ -392,6 +446,73 @@ function createNodeWater(node: Node): THREE.Mesh | null {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(gx, baseY + waterH / 2, gz);
   return mesh;
+}
+
+function areaToBlue(area: number, minArea: number, maxArea: number): THREE.Color {
+  const range = maxArea - minArea;
+  const t = range > 0 ? (area - minArea) / range : 0.5;
+  return new THREE.Color().lerpColors(new THREE.Color(0x88CCFF), new THREE.Color(0x0033AA), t);
+}
+
+function createSubcatchmentMesh(sub: Subcatchment, minArea: number, maxArea: number): THREE.Group {
+  const group = new THREE.Group();
+  if (!sub.points || sub.points.length < 3) return group;
+
+  const pts2d = sub.points.map(p => new THREE.Vector2(p.x * SCALE, p.y * SCALE));
+  const shape = new THREE.Shape(pts2d);
+  const geo = new THREE.ShapeGeometry(shape);
+
+  const blueColor = areaToBlue(sub.area, minArea, maxArea);
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: blueColor,
+    transparent: true,
+    opacity: 0.45,
+    roughness: 0.4,
+    metalness: 0.05,
+    side: THREE.DoubleSide,
+    emissive: blueColor.clone().multiplyScalar(0.15),
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = 0.05;
+  mesh.receiveShadow = true;
+  mesh.userData = { subcatchmentId: sub.id };
+  group.add(mesh);
+
+  const edgeGeo = new THREE.BufferGeometry().setFromPoints(
+    [...pts2d.map(p => new THREE.Vector3(p.x, 0.1, p.y)), new THREE.Vector3(pts2d[0].x, 0.1, pts2d[0].y)]
+  );
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0x0055CC, linewidth: 2 });
+  const edgeLine = new THREE.Line(edgeGeo, edgeMat);
+  group.add(edgeLine);
+
+  let cx = 0, cy = 0;
+  pts2d.forEach(p => { cx += p.x; cy += p.y; });
+  cx /= pts2d.length;
+  cy /= pts2d.length;
+
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 160;
+  labelCanvas.height = 40;
+  const lctx = labelCanvas.getContext('2d');
+  if (lctx) {
+    lctx.fillStyle = 'rgba(0,30,80,0.75)';
+    lctx.fillRect(0, 0, 160, 40);
+    lctx.font = '13px monospace';
+    lctx.fillStyle = '#AADDFF';
+    lctx.textAlign = 'center';
+    lctx.fillText(`${sub.area.toFixed(1)} ac`, 80, 16);
+    lctx.fillText(`${sub.percentImperv.toFixed(0)}% imp`, 80, 34);
+    const tex = new THREE.CanvasTexture(labelCanvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.position.set(cx, 1.5, cy);
+    sprite.scale.set(3, 0.8, 1);
+    group.add(sprite);
+  }
+
+  return group;
 }
 
 function createSteveBlockModel(): THREE.Group {
@@ -639,6 +760,10 @@ export function ThreeCanvas({
             onSelect(obj.userData.linkId);
             return;
           }
+          if (obj.userData?.subcatchmentId) {
+            onSelect(obj.userData.subcatchmentId);
+            return;
+          }
           obj = obj.parent;
         }
       }
@@ -682,8 +807,21 @@ export function ThreeCanvas({
     const terrain = createTerrainChunk(nodes, links);
     modelGroup.add(terrain);
 
+    const elevs = nodes.map(n => n.invertElev);
+    const minElev = elevs.length > 0 ? Math.min(...elevs) : 0;
+    const maxElev = elevs.length > 0 ? Math.max(...elevs) : 10;
+
+    const areas = subcatchments.map(s => s.area);
+    const minArea = areas.length > 0 ? Math.min(...areas) : 0;
+    const maxArea = areas.length > 0 ? Math.max(...areas) : 10;
+
+    subcatchments.forEach(sub => {
+      const subMesh = createSubcatchmentMesh(sub, minArea, maxArea);
+      modelGroup.add(subMesh);
+    });
+
     nodes.forEach(node => {
-      const jMesh = createJunctionMesh(node, node.id === selectedId);
+      const jMesh = createJunctionMesh(node, node.id === selectedId, minElev, maxElev);
       modelGroup.add(jMesh);
 
       const waterMesh = createNodeWater(node);
@@ -694,7 +832,7 @@ export function ThreeCanvas({
     });
 
     links.forEach(link => {
-      const pipeMesh = createPipeMesh(link, nodes, link.id === selectedId);
+      const pipeMesh = createPipeMesh(link, nodes, link.id === selectedId, minElev, maxElev);
       modelGroup.add(pipeMesh);
 
       const waterMesh = createWaterMesh(link, nodes);

@@ -1,4 +1,5 @@
 import { SWMMState } from './swmm-types';
+import greenvilleModel from './greenville-model.json';
 
 export interface DemoModel {
   id: string;
@@ -223,5 +224,15 @@ export const DEMO_MODELS: DemoModel[] = [
       ],
       subcatchments: [],
     },
+  },
+  {
+    id: 'greenville',
+    name: 'Greenville Complete',
+    description: 'Full-featured SWMM model of Greenville, SC with 172 nodes, 223 pipes, 30 subcatchments, storage units, dividers, and all SI unit features.',
+    emoji: '🏙️',
+    difficulty: 'Advanced',
+    nodeCount: 172,
+    linkCount: 223,
+    model: greenvilleModel as SWMMState,
   },
 ];

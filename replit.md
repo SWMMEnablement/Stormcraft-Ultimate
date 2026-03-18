@@ -16,7 +16,7 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: Local React state in the `Home` page component manages the entire SWMM model, simulation state, tutorial progress, budget, and challenge level. React Query (`@tanstack/react-query`) handles server-state for project CRUD operations.
 - **UI Components**: Shadcn/ui component library (new-york style) with Radix UI primitives. Custom SWMM-specific components live in `client/src/components/SWMM/`.
 - **Styling**: Tailwind CSS v4 (via `@tailwindcss/vite` plugin) with CSS variables for theming. Minecraft-inspired pixel fonts (`Press Start 2P`, `VT323`) from Google Fonts.
-- **Canvas Rendering**: The map view uses HTML5 Canvas (`<canvas>`) for 2D rendering. A Three.js WebGL 3D view (`ThreeCanvas.tsx`) provides a Minecraft-style block-based visualization with OrbitControls, animated water, day/night cycle, rain particles, and an animated Steve character walking conduit paths. Toggle between 2D/3D via the toolbar.
+- **Canvas Rendering**: The map view uses HTML5 Canvas (`<canvas>`) for 2D rendering. A Three.js WebGL 3D view (`ThreeCanvas.tsx`) provides a Minecraft-style block-based visualization with OrbitControls, animated water, day/night cycle, rain particles, and an animated Steve character walking conduit paths. Toggle between 2D/3D via the toolbar. Nodes are colored by invert elevation (blue→cyan→green→yellow→red heatmap), pipes are thicker and colored by average elevation, and subcatchments render as blue translucent polygons colored by area size.
 - **Sound**: Web Audio API generates Minecraft-style sound effects (clicks, plops) programmatically — no audio files needed.
 
 ### Key Frontend Modules
@@ -28,6 +28,8 @@ Preferred communication style: Simple, everyday language.
 - `client/src/lib/swmm-engine.ts` — Real hydraulic simulation engine with Manning's equation, topological routing, and kinematic wave approximation
 - `client/src/lib/inp-parser.ts` — Parser for SWMM `.inp` file format (including XSECTIONS for pipe diameters)
 - `client/src/lib/swmm-export.ts` — Generator for SWMM `.inp` file export (with proper XSECTIONS diameter export)
+- `client/src/lib/demo-models.ts` — Demo model definitions including small examples and the Greenville Complete model
+- `client/src/lib/greenville-model.json` — Parsed Greenville, SC SWMM model (172 nodes, 223 links, 30 subcatchments)
 - `client/src/lib/api.ts` — Typed fetch wrappers for the REST API
 - `client/src/lib/sound.ts` — Web Audio synthesized sound effects
 
