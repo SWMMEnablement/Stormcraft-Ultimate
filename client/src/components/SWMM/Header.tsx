@@ -26,7 +26,7 @@ export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport
       data-testid="header"
     >
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1" style={{ fontFamily: '"Press Start 2P", monospace' }}>
+        <div className="flex items-center gap-1" style={{ fontFamily: '"Press Start 2P", monospace' }} title="SWMMCraft Ultimate — Storm Water Management Simulator">
           <span style={{ color: '#55FF55', fontSize: '12px', letterSpacing: '2px' }}>SWMM</span>
           <span style={{ color: '#5555FF', fontSize: '12px', letterSpacing: '2px' }}>CRAFT</span>
           <span style={{ color: '#FFFF55', fontSize: '7px', marginLeft: 4, opacity: 0.8 }}>ULTIMATE</span>
@@ -40,17 +40,17 @@ export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport
       </div>
 
       <div className="flex items-center gap-1">
-        <button onClick={onUndo} className="mc-btn-sm" data-testid="button-undo">UNDO</button>
-        <button onClick={onRedo} className="mc-btn-sm" data-testid="button-redo">REDO</button>
+        <button onClick={onUndo} className="mc-btn-sm" data-testid="button-undo" title="Undo last action (Ctrl+Z)">UNDO</button>
+        <button onClick={onRedo} className="mc-btn-sm" data-testid="button-redo" title="Redo last undone action (Ctrl+Y)">REDO</button>
         <div style={{ width: 1, height: 16, background: '#555' }} />
-        <button onClick={onCopy} className="mc-btn-sm" data-testid="button-copy">COPY</button>
-        <button onClick={onPaste} className="mc-btn-sm" data-testid="button-paste">PASTE</button>
+        <button onClick={onCopy} className="mc-btn-sm" data-testid="button-copy" title="Copy selected element (Ctrl+C)">COPY</button>
+        <button onClick={onPaste} className="mc-btn-sm" data-testid="button-paste" title="Paste copied element (Ctrl+V)">PASTE</button>
         <div style={{ width: 1, height: 16, background: '#555' }} />
-        <button onClick={onAutoLayout} className="mc-btn-sm" data-testid="button-layout">LAYOUT</button>
-        <button onClick={onProfile} className="mc-btn-sm" data-testid="button-profile">PROFILE</button>
-        <button onClick={onExport} className="mc-btn-sm mc-btn-primary-sm" data-testid="button-export">EXPORT</button>
+        <button onClick={onAutoLayout} className="mc-btn-sm" data-testid="button-layout" title="Auto-arrange nodes for a cleaner layout">LAYOUT</button>
+        <button onClick={onProfile} className="mc-btn-sm" data-testid="button-profile" title="Toggle profile view — shows pipe elevations and water levels in cross-section">PROFILE</button>
+        <button onClick={onExport} className="mc-btn-sm mc-btn-primary-sm" data-testid="button-export" title="Export your model as a standard SWMM .inp file">EXPORT</button>
         <div style={{ width: 1, height: 16, background: '#555' }} />
-        <button onClick={toggleTheme} className="mc-btn-sm" data-testid="button-theme">DAY/NIGHT</button>
+        <button onClick={toggleTheme} className="mc-btn-sm" data-testid="button-theme" title="Switch between light and dark theme">DAY/NIGHT</button>
       </div>
     </header>
   );

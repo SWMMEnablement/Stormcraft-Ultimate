@@ -138,16 +138,16 @@ function PixelIcon({ type }: { type: string }) {
   );
 }
 
-const tools: { id: Tool; label: string; slot: string }[] = [
-  { id: 'select', label: 'Select', slot: '1' },
-  { id: 'pan', label: 'Pan', slot: '2' },
-  { id: 'junction', label: 'Junction', slot: '3' },
-  { id: 'outfall', label: 'Outfall', slot: '4' },
-  { id: 'storage', label: 'Storage', slot: '5' },
-  { id: 'conduit', label: 'Conduit', slot: '6' },
-  { id: 'subcatchment', label: 'Subcatch', slot: '7' },
-  { id: 'raingauge', label: 'Rain', slot: '8' },
-  { id: 'delete', label: 'Delete', slot: '9' },
+const tools: { id: Tool; label: string; slot: string; tip: string }[] = [
+  { id: 'select', label: 'Select', slot: '1', tip: 'Select & inspect elements — click nodes or pipes to view properties' },
+  { id: 'pan', label: 'Pan', slot: '2', tip: 'Pan the map — click and drag to move around' },
+  { id: 'junction', label: 'Junction', slot: '3', tip: 'Place a junction node — where pipes connect and water is collected' },
+  { id: 'outfall', label: 'Outfall', slot: '4', tip: 'Place an outfall — the discharge point where water exits your network' },
+  { id: 'storage', label: 'Storage', slot: '5', tip: 'Place a storage unit — holds water to reduce peak flows downstream' },
+  { id: 'conduit', label: 'Conduit', slot: '6', tip: 'Draw a conduit (pipe) — click two nodes to connect them' },
+  { id: 'subcatchment', label: 'Subcatch', slot: '7', tip: 'Draw a subcatchment area — defines a drainage zone that generates runoff' },
+  { id: 'raingauge', label: 'Rain', slot: '8', tip: 'Place a rain gauge — measures rainfall for nearby subcatchments' },
+  { id: 'delete', label: 'Delete', slot: '9', tip: 'Delete mode — click any element to remove it from the network' },
 ];
 
 export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarProps) {
@@ -188,7 +188,7 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
                 transition: 'background 0.1s, border-color 0.1s',
                 transform: isActive ? 'translateY(-4px)' : 'none',
               }}
-              title={`${tool.label} (${tool.slot})`}
+              title={`${tool.tip} (${tool.slot})`}
             >
               <PixelIcon type={tool.id} />
               <span
@@ -239,7 +239,7 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
             transform: is3D ? 'translateY(-4px)' : 'none',
             transition: 'background 0.1s',
           }}
-          title="Toggle 3D (Tab)"
+          title={is3D ? "Switch back to 2D map view (Tab)" : "Switch to 3D Minecraft-style view — orbit with mouse, zoom with scroll (Tab)"}
         >
           <PixelIcon type="3d" />
         </button>

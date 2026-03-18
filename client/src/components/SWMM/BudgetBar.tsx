@@ -28,6 +28,7 @@ export function BudgetBar({ model, budget }: BudgetBarProps) {
         imageRendering: 'pixelated',
       }}
       data-testid="budget-bar"
+      title="Construction budget — tracks spending on junctions, pipes, and storage units"
     >
       <div className="flex items-center justify-between mb-1">
         <span
@@ -47,11 +48,15 @@ export function BudgetBar({ model, budget }: BudgetBarProps) {
             color: labelColor,
             textShadow: '1px 1px 0 #000',
           }}
+          title={`${formatMoney(remaining)} remaining of ${formatMoney(budget.total)} total budget`}
         >
           {formatMoney(remaining)}
         </span>
       </div>
-      <div style={{ height: 6, background: '#333', border: '1px solid #555', overflow: 'hidden' }}>
+      <div
+        style={{ height: 6, background: '#333', border: '1px solid #555', overflow: 'hidden' }}
+        title={`${Math.round(pct)}% of budget used — ${formatMoney(spent)} spent`}
+      >
         <div
           style={{
             height: '100%',
@@ -63,10 +68,16 @@ export function BudgetBar({ model, budget }: BudgetBarProps) {
         />
       </div>
       <div className="flex justify-between mt-1">
-        <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px', color: '#888', textShadow: '1px 1px 0 #000' }}>
+        <span
+          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px', color: '#888', textShadow: '1px 1px 0 #000' }}
+          title="Total amount spent so far"
+        >
           {formatMoney(spent)}
         </span>
-        <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px', color: '#888', textShadow: '1px 1px 0 #000' }}>
+        <span
+          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px', color: '#888', textShadow: '1px 1px 0 #000' }}
+          title="Total budget available for this challenge"
+        >
           {formatMoney(budget.total)}
         </span>
       </div>
