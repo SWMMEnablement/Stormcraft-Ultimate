@@ -309,7 +309,7 @@ function createJunctionMesh(node: Node, isSelected: boolean, minElev: number, ma
   return group;
 }
 
-function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean, minElev: number, maxElev: number): THREE.Group {
+function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean): THREE.Group {
   const group = new THREE.Group();
   const fromNode = nodes.find(n => n.id === link.fromNode);
   const toNode = nodes.find(n => n.id === link.toNode);
@@ -334,18 +334,18 @@ function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean, minElev:
   const pipeSize = Math.max(diam * ELEV_SCALE * 1.2, 0.8);
   const segments = Math.max(1, Math.ceil(len / BLOCK));
 
-  const avgElev = (fromNode.invertElev + toNode.invertElev) / 2;
-  const pipeElevColor = isSelected ? new THREE.Color(COLORS.selected) : elevToColor(avgElev, minElev, maxElev).multiplyScalar(0.6);
-  const color = pipeElevColor.getHex();
-  const rivetColor = isSelected ? COLORS.selectedGlow : pipeElevColor.clone().lerp(new THREE.Color(0xFFFFFF), 0.4).getHex();
+  const blueShades = [0x2255BB, 0x3366CC, 0x2244AA, 0x4477DD];
+  const color = isSelected ? COLORS.selected : 0x3366CC;
+  const rivetColor = isSelected ? COLORS.selectedGlow : 0x5599EE;
 
   for (let i = 0; i < segments; i++) {
     const t = (i + 0.5) / segments;
     const pos = from.clone().lerp(to, t);
     const segLen = len / segments;
 
+    const blockColor = isSelected ? COLORS.selected : blueShades[i % blueShades.length];
     const geo = new THREE.BoxGeometry(pipeSize, pipeSize, segLen * 1.02);
-    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.25 });
+    const mat = new THREE.MeshStandardMaterial({ color: blockColor, roughness: 0.7, metalness: 0.1 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.copy(pos);
     mesh.lookAt(to);
@@ -355,7 +355,7 @@ function createPipeMesh(link: Link, nodes: Node[], isSelected: boolean, minElev:
     group.add(mesh);
 
     const rivetGeo = new THREE.BoxGeometry(pipeSize + 0.2, pipeSize + 0.2, 0.12);
-    const rivetMat = new THREE.MeshStandardMaterial({ color: rivetColor, roughness: 0.3, metalness: 0.5 });
+    const rivetMat = new THREE.MeshStandardMaterial({ color: rivetColor, roughness: 0.4, metalness: 0.3 });
     const rivet = new THREE.Mesh(rivetGeo, rivetMat);
     rivet.position.copy(pos);
     rivet.lookAt(to);
@@ -833,7 +833,7 @@ export function ThreeCanvas({
     });
 
     links.forEach(link => {
-      const pipeMesh = createPipeMesh(link, nodes, link.id === selectedId, minElev, maxElev);
+      const pipeMesh = createPipeMesh(link, nodes, link.id === selectedId);
       modelGroup.add(pipeMesh);
 
       const waterMesh = createWaterMesh(link, nodes);
