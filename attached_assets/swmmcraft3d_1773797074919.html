@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWMMCRAFT 3D — Minecraft-Style SWMM5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: #1a1a2e;
+    font-family: 'VT323', monospace;
+    overflow: hidden;
+    color: #00ff88;
+    cursor: crosshair;
+  }
+
+  #canvas-container {
+    position: fixed; inset: 0;
+  }
+
+  #canvas-container canvas {
+    display: block;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  #topbar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #0d0d1a;
+    border-bottom: 3px solid #00ff88;
+    pointer-events: all;
+  }
+
+  #logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    padding: 8px 14px;
+    color: #00ff88;
+    text-shadow: 0 0 12px #00ff88;
+    border-right: 2px solid #00ff88;
+    letter-spacing: 1px;
+  }
+  #logo span { color: #ff6600; }
+
+  .topbtn {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #1a3a2a;
+    color: #00cc66;
+    cursor: pointer;
+    pointer-events: all;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+  .topbtn:hover { background: #0a2a1a; color: #00ff88; text-shadow: 0 0 8px #00ff88; }
+  .topbtn.active { background: #0a2a1a; color: #00ff88; border-bottom: 2px solid #00ff88; }
+
+  #sim-panel {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+  }
+
+  .stat-box {
+    background: #0a1a12;
+    border: 1px solid #00ff4422;
+    padding: 3px 10px;
+    font-size: 17px;
+    color: #00ff88;
+    letter-spacing: 1px;
+  }
+
+  #play-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 6px 12px;
+    background: #003a18;
+    border: 2px solid #00ff88;
+    color: #00ff88;
+    cursor: pointer;
+    pointer-events: all;
+    transition: all 0.2s;
+    text-shadow: 0 0 6px #00ff88;
+  }
+  #play-btn:hover { background: #00ff88; color: #001a08; }
+  #play-btn.playing { background: #3a0008; border-color: #ff4444; color: #ff4444; }
+
+  /* ── Side panels ── */
+  #left-panel {
+    position: fixed;
+    left: 0; top: 42px; bottom: 0;
+    width: 200px;
+    background: #0d0d1a;
+    border-right: 2px solid #00ff8833;
+    padding: 12px 0;
+    pointer-events: all;
+    overflow-y: auto;
+    z-index: 9;
+  }
+
+  .panel-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #00ff44;
+    padding: 4px 12px 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #00ff4422;
+    margin-bottom: 8px;
+  }
+
+  .net-item {
+    font-size: 15px;
+    padding: 4px 12px;
+    color: #00cc66;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.1s;
+  }
+  .net-item:hover { background: #0a2a1a; color: #00ff88; }
+  .net-item.selected { background: #0a3a1a; color: #00ff88; border-left: 3px solid #00ff88; }
+  .net-item .dot {
+    width: 8px; height: 8px;
+    border-radius: 0;
+    flex-shrink: 0;
+  }
+
+  /* ── Right info panel ── */
+  #right-panel {
+    position: fixed;
+    right: 0; top: 42px;
+    width: 220px;
+    background: #0d0d1aee;
+    border-left: 2px solid #00ff8833;
+    padding: 12px;
+    pointer-events: all;
+    z-index: 9;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    padding: 3px 0;
+    border-bottom: 1px solid #00ff4411;
+    color: #00aa55;
+  }
+  .info-row .val { color: #00ff88; }
+
+  /* ── Bottom toolbar ── */
+  #bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #0d0d1a;
+    border-top: 2px solid #00ff8833;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 6px 12px;
+    pointer-events: all;
+    z-index: 10;
+  }
+
+  .tool-slot {
+    width: 54px; height: 54px;
+    border: 2px solid #1a3a2a;
+    background: #0a1a12;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .tool-slot:hover { border-color: #00ff88; background: #0a2a1a; }
+  .tool-slot.active { border-color: #00ff88; background: #0a3a1a; box-shadow: 0 0 8px #00ff8844; }
+  .tool-slot .tnum {
+    position: absolute;
+    top: 2px; left: 4px;
+    font-size: 10px;
+    color: #00aa55;
+    font-family: 'VT323', monospace;
+  }
+  .tool-slot .tlabel {
+    font-size: 9px;
+    color: #00aa55;
+    font-family: 'VT323', monospace;
+    margin-top: 2px;
+  }
+
+  #camera-controls {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 14px;
+    color: #00aa55;
+  }
+  .cam-btn {
+    background: #0a1a12;
+    border: 1px solid #1a3a2a;
+    color: #00cc66;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .cam-btn:hover { background: #0a2a1a; color: #00ff88; }
+
+  /* ── Import overlay ── */
+  #import-overlay {
+    position: fixed; inset: 0;
+    background: #0008;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    pointer-events: all;
+  }
+  #import-overlay.open { display: flex; }
+
+  .import-box {
+    background: #0d0d1a;
+    border: 3px solid #00ff88;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow: 0 0 40px #00ff8844;
+    max-width: 500px;
+    width: 90%;
+  }
+  .import-box h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: #00ff88;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00ff88;
+  }
+  .import-box p { font-size: 16px; color: #00aa66; margin-bottom: 16px; }
+
+  #file-drop {
+    border: 2px dashed #00ff8866;
+    padding: 30px;
+    margin: 16px 0;
+    cursor: pointer;
+    color: #00aa55;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+  #file-drop:hover, #file-drop.dragover { border-color: #00ff88; color: #00ff88; background: #0a2a1a; }
+  #file-input { display: none; }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .demo-btn {
+    background: #0a1a12;
+    border: 1px solid #00ff4433;
+    color: #00cc66;
+    padding: 8px 4px;
+    cursor: pointer;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .demo-btn:hover { border-color: #00ff88; color: #00ff88; background: #0a2a1a; }
+
+  .close-btn {
+    background: transparent;
+    border: 1px solid #ff444433;
+    color: #ff4444;
+    padding: 6px 16px;
+    cursor: pointer;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    margin-top: 16px;
+    transition: all 0.15s;
+  }
+  .close-btn:hover { background: #3a0008; }
+
+  /* ── Steve dialog ── */
+  #steve-dialog {
+    position: fixed;
+    bottom: 80px;
+    left: 220px;
+    background: #0d0d1a;
+    border: 2px solid #00ff88;
+    padding: 10px 16px;
+    font-size: 16px;
+    color: #00ff88;
+    max-width: 320px;
+    z-index: 20;
+    display: none;
+    box-shadow: 0 0 20px #00ff8844;
+  }
+  #steve-dialog.show { display: block; }
+  #steve-dialog::before {
+    content: '🧑‍🔧 STEVE: ';
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    display: block;
+    margin-bottom: 6px;
+    color: #ffaa00;
+  }
+
+  /* ── Rain overlay ── */
+  #rain-canvas {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 1s;
+  }
+  #rain-canvas.raining { opacity: 0.4; }
+
+  /* ── Loading ── */
+  #loading {
+    position: fixed; inset: 0;
+    background: #0d0d1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    transition: opacity 0.6s;
+  }
+  #loading h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    color: #00ff88;
+    text-shadow: 0 0 20px #00ff88;
+    margin-bottom: 20px;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  #loading h1 span { color: #ff6600; }
+  #loading p { font-size: 20px; color: #00aa55; }
+  #loading-bar {
+    width: 300px;
+    height: 8px;
+    background: #0a1a12;
+    border: 1px solid #00ff4433;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+  #loading-fill {
+    height: 100%;
+    background: #00ff88;
+    width: 0%;
+    transition: width 0.3s;
+    box-shadow: 0 0 8px #00ff88;
+  }
+
+  @keyframes pulse {
+    0%,100% { text-shadow: 0 0 20px #00ff88; }
+    50% { text-shadow: 0 0 40px #00ff88, 0 0 60px #00ff4488; }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0d0d1a; }
+  ::-webkit-scrollbar-thumb { background: #00ff4433; }
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading">
+  <h1>SWMM<span>CRAFT</span> 3D</h1>
+  <p id="loading-msg">Loading Minecraft-style SWMM world...</p>
+  <div id="loading-bar"><div id="loading-fill"></div></div>
+</div>
+
+<!-- Rain canvas (2D overlay) -->
+<canvas id="rain-canvas"></canvas>
+
+<!-- Three.js canvas container -->
+<div id="canvas-container"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="topbar">
+    <div id="logo">SWMM<span>CRAFT</span> 3D</div>
+    <button class="topbtn active" id="btn-projects">PROJECTS</button>
+    <button class="topbtn" id="btn-demos" onclick="openImport()">IMPORT</button>
+    <button class="topbtn" id="btn-view" onclick="cycleView()">VIEW: ISO</button>
+    <button class="topbtn" id="btn-rain" onclick="toggleRain()">☁ RAIN: OFF</button>
+    <div id="sim-panel">
+      <div class="stat-box" id="stat-time">T: 0.00 hrs</div>
+      <div class="stat-box" id="stat-rain">RAIN: 0.0 mm/hr</div>
+      <div class="stat-box" id="stat-flow">FLOW: 0.0 cfs</div>
+      <button id="play-btn" onclick="toggleSim()">▶ PLAY</button>
+    </div>
+  </div>
+</div>
+
+<!-- Left panel: network tree -->
+<div id="left-panel">
+  <div class="panel-title">Network</div>
+  <div id="network-tree"></div>
+</div>
+
+<!-- Right panel: selected element -->
+<div id="right-panel">
+  <div class="panel-title">Inspector</div>
+  <div id="inspector-content">
+    <div class="info-row"><span>Select an element</span></div>
+  </div>
+</div>
+
+<!-- Bottom toolbar -->
+<div id="bottom-bar">
+  <div class="tool-slot active" data-tool="select" title="Select">
+    <span class="tnum">1</span>🖱️<span class="tlabel">Select</span>
+  </div>
+  <div class="tool-slot" data-tool="junction" title="Junction (J)">
+    <span class="tnum">2</span>🔵<span class="tlabel">Junction</span>
+  </div>
+  <div class="tool-slot" data-tool="conduit" title="Conduit (C)">
+    <span class="tnum">3</span>⬜<span class="tlabel">Conduit</span>
+  </div>
+  <div class="tool-slot" data-tool="outfall" title="Outfall (O)">
+    <span class="tnum">4</span>🟩<span class="tlabel">Outfall</span>
+  </div>
+  <div class="tool-slot" data-tool="subcatch" title="Subcatchment (S)">
+    <span class="tnum">5</span>🟫<span class="tlabel">Subcat</span>
+  </div>
+  <div class="tool-slot" data-tool="raingage" title="Rain Gage (R)">
+    <span class="tnum">6</span>🌧️<span class="tlabel">Gage</span>
+  </div>
+  <div class="camera-controls" id="camera-controls">
+    <span style="font-size:13px;color:#006633">CAMERA:</span>
+    <button class="cam-btn" onclick="resetCamera()">⟳ RESET</button>
+    <button class="cam-btn" onclick="setCameraTop()">⬆ TOP</button>
+    <button class="cam-btn" onclick="setCameraISO()">◇ ISO</button>
+    <button class="cam-btn" onclick="setCameraFP()">👁 FP</button>
+  </div>
+</div>
+
+<!-- Steve dialog -->
+<div id="steve-dialog" id="steve-dialog">Loading the SWMM world...</div>
+
+<!-- Import overlay -->
+<div id="import-overlay">
+  <div class="import-box">
+    <h2>📂 IMPORT MODEL</h2>
+    <p>Load an EPA SWMM .inp file into the 3D world</p>
+    <div id="file-drop" onclick="document.getElementById('file-input').click()">
+      📁 DROP .INP FILE HERE<br>
+      <span style="font-size:13px;color:#006633">or click to browse</span>
+    </div>
+    <input type="file" id="file-input" accept=".inp">
+    <p style="margin-top:12px">Or load a demo model:</p>
+    <div class="demo-grid">
+      <button class="demo-btn" onclick="loadDemo('example1')">EX1<br>Simple</button>
+      <button class="demo-btn" onclick="loadDemo('example2')">EX2<br>Storage</button>
+      <button class="demo-btn" onclick="loadDemo('example3')">EX3<br>CSO</button>
+      <button class="demo-btn" onclick="loadDemo('example5')">EX5<br>Pump</button>
+      <button class="demo-btn" onclick="loadDemo('dual')">DUAL<br>Drain</button>
+      <button class="demo-btn" onclick="loadDemo('lid')">LID<br>Bioret</button>
+    </div>
+    <button class="close-btn" onclick="closeImport()">✕ CLOSE</button>
+  </div>
+</div>
+
+<!-- Three.js + OrbitControls from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// SWMMCRAFT 3D — Three.js Minecraft-style SWMM5 visualizer
+// Robert E. Dickinson / Autodesk Water Technologist
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Constants ──────────────────────────────────────────────────────────────
+const GRID    = 4;      // world units per SWMM coordinate unit
+const ZSCALE  = 0.8;    // vertical exaggeration
+const PIPE_R  = 0.35;   // default pipe radius (block half-width)
+const GROUND  = -2;     // ground Y level
+
+// ── Minecraft-style block palette ──────────────────────────────────────────
+const COLORS = {
+  junction:     0x4a9eff,
+  outfall:      0x44ff88,
+  storage:      0xffaa22,
+  divider:      0xcc44ff,
+  conduit:      0x888899,
+  conduitWet:   0x2266ff,
+  pump:         0xff6622,
+  weir:         0xffdd22,
+  orifice:      0xdd44aa,
+  subcatch:     0x3a7a3a,
+  raingage:     0x44aaff,
+  grass:        0x2d5a1b,
+  dirt:         0x6b4226,
+  water:        0x1144aacc,
+  sky:          0x1a2a4a,
+  fog:          0x1a2a4a,
+  steve:        0xff8844,
+};
+
+// ── Three.js scene setup ──────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const W = window.innerWidth, H = window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(COLORS.sky);
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(COLORS.fog, 0.012);
+
+// Camera
+const camera = new THREE.PerspectiveCamera(55, W/H, 0.1, 2000);
+let cameraMode = 'iso';
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0x334455, 0.8);
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+sunLight.position.set(50, 80, 40);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 500;
+sunLight.shadow.camera.left = sunLight.shadow.camera.bottom = -100;
+sunLight.shadow.camera.right = sunLight.shadow.camera.top = 100;
+scene.add(sunLight);
+
+const fillLight = new THREE.DirectionalLight(0x446688, 0.4);
+fillLight.position.set(-30, 20, -30);
+scene.add(fillLight);
+
+// OrbitControls (manual implementation since Three r128 addons aren't on CDN easily)
+let isMouseDown = false, lastMouse = { x: 0, y: 0 };
+let camTheta = Math.PI/4, camPhi = Math.PI/3, camDist = 80, camTarget = new THREE.Vector3(0,0,0);
+
+function applyOrbit() {
+  camera.position.set(
+    camTarget.x + camDist * Math.sin(camPhi) * Math.sin(camTheta),
+    camTarget.y + camDist * Math.cos(camPhi),
+    camTarget.z + camDist * Math.sin(camPhi) * Math.cos(camTheta)
+  );
+  camera.lookAt(camTarget);
+}
+
+renderer.domElement.addEventListener('mousedown', e => { isMouseDown = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+renderer.domElement.addEventListener('mouseup',   () => { isMouseDown = false; });
+renderer.domElement.addEventListener('mousemove', e => {
+  if (!isMouseDown) return;
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  lastMouse = { x: e.clientX, y: e.clientY };
+  if (e.buttons === 1) {
+    camTheta -= dx * 0.008;
+    camPhi = Math.max(0.1, Math.min(Math.PI/2 - 0.01, camPhi + dy * 0.008));
+  } else if (e.buttons === 4 || e.buttons === 2) {
+    const right = new THREE.Vector3(-Math.cos(camTheta), 0, Math.sin(camTheta));
+    const forward = new THREE.Vector3(-Math.sin(camTheta)*Math.cos(camPhi), Math.sin(camPhi), -Math.cos(camTheta)*Math.cos(camPhi)).negate();
+    const panSpeed = camDist * 0.001;
+    camTarget.addScaledVector(right, dx * panSpeed);
+    camTarget.addScaledVector(new THREE.Vector3(0,1,0).cross(right).normalize(), -dy * panSpeed);
+  }
+  applyOrbit();
+});
+renderer.domElement.addEventListener('wheel', e => {
+  camDist = Math.max(5, Math.min(300, camDist + e.deltaY * 0.05));
+  applyOrbit();
+});
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+
+// ── Raycasting for element selection ──────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse2d = new THREE.Vector2();
+let selectableObjects = [];
+let selectedObj = null;
+
+renderer.domElement.addEventListener('click', e => {
+  if (activeTool !== 'select') return;
+  mouse2d.x = (e.clientX / W) * 2 - 1;
+  mouse2d.y = -(e.clientY / H) * 2 + 1;
+  raycaster.setFromCamera(mouse2d, camera);
+  const hits = raycaster.intersectObjects(selectableObjects, false);
+  if (hits.length > 0) {
+    selectElement(hits[0].object);
+  }
+});
+
+// ── State ─────────────────────────────────────────────────────────────────
+let model = null;
+let worldGroup = new THREE.Group();
+scene.add(worldGroup);
+
+let simRunning = false;
+let simTime    = 0;
+let simStep    = 0;
+let activeTool = 'select';
+let viewMode   = 'iso';
+let rainActive = false;
+let rainDrops  = [];
+
+// initialise camera position now that viewMode exists
+setCameraISO();
+
+// Steve
+let steveGroup = null;
+let stevePath  = [];
+let steveT     = 0;
+
+// ── SWMM INP Parser (lightweight) ─────────────────────────────────────────
+function parseInp(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const secs = {};
+  let cur = null;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line || line.startsWith(';')) continue;
+    const m = line.match(/^\[([A-Z_]+)\]/i);
+    if (m) { cur = m[1].toUpperCase(); if (!secs[cur]) secs[cur] = []; }
+    else if (cur) secs[cur].push(line);
+  }
+
+  const tok = line => line.replace(/;.*$/, '').trim().split(/\s+/).filter(Boolean);
+
+  const junctions = (secs.JUNCTIONS || []).map(l => {
+    const p = tok(l); if (p.length < 2) return null;
+    return { name: p[0], elev: +p[1], maxDepth: +p[2] || 10, type: 'junction' };
+  }).filter(Boolean);
+
+  const outfalls = (secs.OUTFALLS || []).map(l => {
+    const p = tok(l); if (!p[0]) return null;
+    return { name: p[0], elev: +p[1] || 0, type: 'outfall' };
+  }).filter(Boolean);
+
+  const storage = (secs.STORAGE || []).map(l => {
+    const p = tok(l); if (!p[0]) return null;
+    return { name: p[0], elev: +p[1] || 0, maxDepth: +p[2] || 8, type: 'storage' };
+  }).filter(Boolean);
+
+  const conduits = (secs.CONDUITS || []).map(l => {
+    const p = tok(l); if (p.length < 4) return null;
+    return { name: p[0], from: p[1], to: p[2], length: +p[3] || 100, roughness: +p[4] || 0.013 };
+  }).filter(Boolean);
+
+  const pumps = (secs.PUMPS || []).map(l => {
+    const p = tok(l); if (p.length < 3) return null;
+    return { name: p[0], from: p[1], to: p[2], type: 'pump' };
+  }).filter(Boolean);
+
+  const weirs = (secs.WEIRS || []).map(l => {
+    const p = tok(l); if (p.length < 3) return null;
+    return { name: p[0], from: p[1], to: p[2], type: 'weir' };
+  }).filter(Boolean);
+
+  const orifices = (secs.ORIFICES || []).map(l => {
+    const p = tok(l); if (p.length < 3) return null;
+    return { name: p[0], from: p[1], to: p[2], type: 'orifice' };
+  }).filter(Boolean);
+
+  const xsections = {};
+  (secs.XSECTIONS || []).forEach(l => {
+    const p = tok(l); if (p.length < 3) return;
+    xsections[p[0]] = { shape: p[1], geom1: +p[2] || 1.0 };
+  });
+
+  const coords = {};
+  (secs.COORDINATES || []).forEach(l => {
+    const p = tok(l); if (p.length < 3) return;
+    coords[p[0]] = { x: +p[1], y: +p[2] };
+  });
+
+  const vertices = {};
+  (secs.VERTICES || []).forEach(l => {
+    const p = tok(l); if (p.length < 3) return;
+    if (!vertices[p[0]]) vertices[p[0]] = [];
+    vertices[p[0]].push({ x: +p[1], y: +p[2] });
+  });
+
+  const polygons = {};
+  (secs.POLYGONS || []).forEach(l => {
+    const p = tok(l); if (p.length < 3) return;
+    if (!polygons[p[0]]) polygons[p[0]] = [];
+    polygons[p[0]].push({ x: +p[1], y: +p[2] });
+  });
+
+  const subcatchments = (secs.SUBCATCHMENTS || []).map(l => {
+    const p = tok(l); if (!p[0]) return null;
+    return { name: p[0], gage: p[1], outlet: p[2], area: +p[3] || 1, imperv: +p[5] || 50 };
+  }).filter(Boolean);
+
+  const raingages = (secs.RAINGAGES || []).map(l => {
+    const p = tok(l); if (!p[0]) return null;
+    return { name: p[0] };
+  }).filter(Boolean);
+
+  const options = {};
+  (secs.OPTIONS || []).forEach(l => {
+    const p = tok(l); if (p.length >= 2) options[p[0].toUpperCase()] = p[1];
+  });
+
+  const allLinks = [
+    ...conduits,
+    ...pumps.map(p => ({ ...p, linkType: 'pump' })),
+    ...weirs.map(w => ({ ...w, linkType: 'weir' })),
+    ...orifices.map(o => ({ ...o, linkType: 'orifice' })),
+  ];
+
+  return { junctions, outfalls, storage, conduits, allLinks, xsections, coords, vertices, polygons, subcatchments, raingages, options };
+}
+
+// ── World coordinate transform ─────────────────────────────────────────────
+function toWorld(x, y, elev = 0) {
+  return new THREE.Vector3(x * GRID, elev * ZSCALE, -y * GRID);
+}
+
+// ── Build the 3D world from parsed model ───────────────────────────────────
+function buildWorld(m) {
+  // Clear existing world
+  while (worldGroup.children.length > 0) worldGroup.remove(worldGroup.children[0]);
+  selectableObjects = [];
+  stevePath = [];
+
+  if (!m) return;
+
+  const allNodes = [...m.junctions, ...m.outfalls, ...m.storage];
+  const nodeMap = {};
+  allNodes.forEach(n => nodeMap[n.name] = n);
+
+  // ── Compute bounding box to center the world ──
+  const xs = Object.values(m.coords).map(c => c.x);
+  const ys = Object.values(m.coords).map(c => c.y);
+  if (!xs.length) return;
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const ox = cx, oy = cy;
+
+  const wPos = (name) => {
+    const c = m.coords[name];
+    if (!c) return new THREE.Vector3(0, 0, 0);
+    const node = nodeMap[name];
+    const elev = node ? node.elev : 0;
+    return toWorld(c.x - ox, c.y - oy, elev);
+  };
+
+  // ── Ground plane (checkerboard) ───────────────────────────────────────
+  const groundW = (Math.max(...xs) - Math.min(...xs)) * GRID + 40;
+  const groundD = (Math.max(...ys) - Math.min(...ys)) * GRID + 40;
+
+  // Grass top
+  const grassGeo = new THREE.BoxGeometry(groundW, 1, groundD);
+  const grassMat = new THREE.MeshLambertMaterial({ color: COLORS.grass });
+  const grass = new THREE.Mesh(grassGeo, grassMat);
+  grass.position.y = GROUND - 0.5;
+  grass.receiveShadow = true;
+  worldGroup.add(grass);
+
+  // Checkerboard pattern using small tiles
+  const tileCount = Math.ceil(groundW / GRID);
+  const tileMat1 = new THREE.MeshLambertMaterial({ color: 0x2a5a1a });
+  const tileMat2 = new THREE.MeshLambertMaterial({ color: 0x1e4a14 });
+  const tileGeo  = new THREE.BoxGeometry(GRID, 0.12, GRID);
+  for (let tx = 0; tx < tileCount; tx++) {
+    for (let tz = 0; tz < tileCount; tz++) {
+      const tile = new THREE.Mesh(tileGeo, (tx+tz)%2 === 0 ? tileMat1 : tileMat2);
+      tile.position.set(
+        -groundW/2 + tx*GRID + GRID/2,
+        GROUND + 0.06,
+        -groundD/2 + tz*GRID + GRID/2
+      );
+      tile.receiveShadow = true;
+      worldGroup.add(tile);
+    }
+  }
+
+  // ── Subcatchment ground patches ───────────────────────────────────────
+  m.subcatchments.forEach((s, si) => {
+    const poly = m.polygons[s.name];
+    if (!poly || poly.length < 3) return;
+
+    // Simple flat polygon approximation using bounding box
+    const pxs = poly.map(p => (p.x - ox) * GRID);
+    const pzs = poly.map(p => -(p.y - oy) * GRID);
+    const px = Math.min(...pxs), pz = Math.min(...pzs);
+    const pw = Math.max(...pxs) - px, pd = Math.max(...pzs) - pz;
+
+    const colors = [0x3a6a2a, 0x2a5a1a, 0x4a7a3a, 0x1a4a0a];
+    const subMat = new THREE.MeshLambertMaterial({
+      color: colors[si % colors.length],
+      transparent: true, opacity: 0.7
+    });
+    const subGeo = new THREE.BoxGeometry(pw || 8, 0.2, pd || 8);
+    const sub    = new THREE.Mesh(subGeo, subMat);
+    sub.position.set(px + pw/2, GROUND + 0.15, pz + pd/2);
+    sub.receiveShadow = true;
+    sub.userData = { type: 'subcatch', name: s.name, data: s };
+    worldGroup.add(sub);
+    selectableObjects.push(sub);
+  });
+
+  // ── Nodes (Minecraft block style) ────────────────────────────────────
+  allNodes.forEach(node => {
+    const c = m.coords[node.name];
+    if (!c) return;
+
+    const pos = wPos(node.name);
+    const col = COLORS[node.type] || COLORS.junction;
+    const h   = node.maxDepth ? node.maxDepth * ZSCALE * 0.5 : 2;
+
+    // Minecraft-style block: flat square pillar from ground to invert
+    const poleH = Math.max(0.5, pos.y - GROUND);
+    if (poleH > 0.1) {
+      const poleGeo = new THREE.BoxGeometry(0.5, poleH, 0.5);
+      const poleMat = new THREE.MeshLambertMaterial({ color: COLORS.dirt });
+      const pole    = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.set(pos.x, GROUND + poleH/2, pos.z);
+      pole.castShadow = true;
+      worldGroup.add(pole);
+    }
+
+    // Node box (Minecraft block)
+    const nodeGeo = new THREE.BoxGeometry(1.6, 1.6, 1.6);
+    const nodeMat = new THREE.MeshLambertMaterial({ color: col });
+    const nodeMesh = new THREE.Mesh(nodeGeo, nodeMat);
+    nodeMesh.position.copy(pos);
+    nodeMesh.position.y = Math.max(GROUND + 0.8, pos.y + 0.4);
+    nodeMesh.castShadow = true;
+    nodeMesh.receiveShadow = true;
+    nodeMesh.userData = { type: 'node', name: node.name, data: node };
+    worldGroup.add(nodeMesh);
+    selectableObjects.push(nodeMesh);
+
+    // Label sprite
+    addLabel(node.name, nodeMesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
+
+    // Depth water column (animated later)
+    if (node.type === 'junction' || node.type === 'storage') {
+      const waterGeo = new THREE.BoxGeometry(1.4, 0.1, 1.4);
+      const waterMat = new THREE.MeshLambertMaterial({
+        color: 0x1144ff, transparent: true, opacity: 0.7
+      });
+      const water = new THREE.Mesh(waterGeo, waterMat);
+      water.position.copy(nodeMesh.position);
+      water.userData = { isWater: true, baseY: nodeMesh.position.y, node: node.name };
+      worldGroup.add(water);
+    }
+
+    // Rain gauge: tall antenna
+    if (node.type === 'junction' && m.raingages.some(g => g.name === node.name)) {
+      const antGeo = new THREE.CylinderGeometry(0.08, 0.08, 3, 6);
+      const antMat = new THREE.MeshLambertMaterial({ color: COLORS.raingage });
+      const ant    = new THREE.Mesh(antGeo, antMat);
+      ant.position.copy(nodeMesh.position);
+      ant.position.y += 2.3;
+      worldGroup.add(ant);
+    }
+  });
+
+  // ── Links (pipes, pumps, weirs) ───────────────────────────────────────
+  m.allLinks.forEach(link => {
+    const fromC = m.coords[link.from];
+    const toC   = m.coords[link.to];
+    if (!fromC || !toC) return;
+
+    const fromPos = wPos(link.from);
+    const toPos   = wPos(link.to);
+
+    // Interpolate via interior vertices
+    const verts = m.vertices[link.name] || [];
+    const points = [fromPos];
+    verts.forEach(v => points.push(toWorld(v.x - ox, v.y - oy, 0)));
+    points.push(toPos);
+
+    const xs = m.xsections[link.name];
+    const diam = xs ? xs.geom1 * GRID * 0.15 : PIPE_R;
+    const linkType = link.linkType || 'conduit';
+
+    // Build pipe segments between each pair of points
+    const baseColor = linkType === 'pump'   ? COLORS.pump   :
+                      linkType === 'weir'   ? COLORS.weir   :
+                      linkType === 'orifice'? COLORS.orifice : COLORS.conduit;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i].clone();
+      const b = points[i+1].clone();
+
+      // Set pipe Y to ground if below
+      a.y = Math.max(GROUND + diam, a.y + diam);
+      b.y = Math.max(GROUND + diam, b.y + diam);
+
+      const dir = new THREE.Vector3().subVectors(b, a);
+      const len = dir.length();
+      if (len < 0.1) continue;
+
+      // Minecraft block pipe: BoxGeometry
+      const pipeGeo = new THREE.BoxGeometry(diam * 2, diam * 2, len);
+      const pipeMat = new THREE.MeshLambertMaterial({ color: baseColor });
+      const pipe    = new THREE.Mesh(pipeGeo, pipeMat);
+      pipe.position.copy(a).lerp(b, 0.5);
+      pipe.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1),
+        dir.clone().normalize()
+      );
+      pipe.castShadow = true;
+      pipe.userData = { type: 'link', name: link.name, data: link, isLink: true };
+      worldGroup.add(pipe);
+      selectableObjects.push(pipe);
+
+      // Water fill inside pipe (animated)
+      const waterGeo = new THREE.BoxGeometry(diam * 1.6, diam * 0.3, len - 0.1);
+      const waterMat = new THREE.MeshLambertMaterial({
+        color: 0x2255ff, transparent: true, opacity: 0.8
+      });
+      const waterFill = new THREE.Mesh(waterGeo, waterMat);
+      waterFill.position.copy(pipe.position);
+      waterFill.position.y -= diam * 0.7;
+      waterFill.quaternion.copy(pipe.quaternion);
+      waterFill.userData = { isWaterFill: true, link: link.name };
+      worldGroup.add(waterFill);
+
+      // Add to steve path
+      if (i === 0) stevePath.push(a.clone());
+    }
+    if (points.length > 0) {
+      const last = points[points.length-1].clone();
+      last.y = Math.max(GROUND + diam, last.y + diam);
+      stevePath.push(last);
+    }
+  });
+
+  // ── Rain gauges ──────────────────────────────────────────────────────
+  m.raingages.forEach(g => {
+    const c = m.coords[g.name];
+    if (c) return; // already handled above
+    // Standalone gage at random location
+  });
+
+  // ── Build Steve ───────────────────────────────────────────────────────
+  buildSteve();
+
+  // Update network tree
+  updateNetworkTree(m);
+
+  // Center camera
+  camTarget.set(0, 2, 0);
+  setCameraISO();
+
+  // Steve greeting
+  steveSpeak(`Loaded ${allNodes.length} nodes, ${m.allLinks.length} links. Drag to orbit, scroll to zoom!`);
+}
+
+// ── Label sprites ─────────────────────────────────────────────────────────
+function addLabel(text, pos) {
+  const canvas = document.createElement('canvas');
+  canvas.width  = 128; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 64, 20);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const spr = new THREE.Sprite(mat);
+  spr.position.copy(pos);
+  spr.scale.set(3, 0.75, 1);
+  worldGroup.add(spr);
+}
+
+// ── Steve character ───────────────────────────────────────────────────────
+function buildSteve() {
+  if (steveGroup) worldGroup.remove(steveGroup);
+  steveGroup = new THREE.Group();
+
+  // Body (orange hi-vis)
+  const bodyGeo = new THREE.BoxGeometry(0.5, 0.7, 0.3);
+  const bodyMat = new THREE.MeshLambertMaterial({ color: 0xff6600 });
+  const body    = new THREE.Mesh(bodyGeo, bodyMat);
+  steveGroup.add(body);
+
+  // Head
+  const headGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45);
+  const headMat = new THREE.MeshLambertMaterial({ color: 0xffcc88 });
+  const head    = new THREE.Mesh(headGeo, headMat);
+  head.position.y = 0.6;
+  steveGroup.add(head);
+
+  // Hard hat
+  const hatGeo  = new THREE.BoxGeometry(0.52, 0.18, 0.52);
+  const hatMat  = new THREE.MeshLambertMaterial({ color: 0xffff00 });
+  const hat     = new THREE.Mesh(hatGeo, hatMat);
+  hat.position.y = 0.88;
+  steveGroup.add(hat);
+
+  // Arms
+  const armGeo = new THREE.BoxGeometry(0.2, 0.6, 0.2);
+  const armMat = new THREE.MeshLambertMaterial({ color: 0xff6600 });
+  ['L','R'].forEach((side, i) => {
+    const arm = new THREE.Mesh(armGeo, armMat);
+    arm.position.set(side === 'L' ? -0.35 : 0.35, 0, 0);
+    arm.userData = { isArm: true, side };
+    steveGroup.add(arm);
+  });
+
+  // Legs
+  const legGeo = new THREE.BoxGeometry(0.22, 0.5, 0.22);
+  const legMat = new THREE.MeshLambertMaterial({ color: 0x223388 });
+  ['L','R'].forEach((side) => {
+    const leg = new THREE.Mesh(legGeo, legMat);
+    leg.position.set(side === 'L' ? -0.12 : 0.12, -0.6, 0);
+    leg.userData = { isLeg: true, side };
+    steveGroup.add(leg);
+  });
+
+  if (stevePath.length > 0) {
+    steveGroup.position.copy(stevePath[0]);
+    steveGroup.position.y += 1.0;
+  } else {
+    steveGroup.position.set(0, GROUND + 1.8, 0);
+  }
+
+  worldGroup.add(steveGroup);
+}
+
+// ── Steve movement ────────────────────────────────────────────────────────
+function updateSteve(dt) {
+  if (!steveGroup || stevePath.length < 2) return;
+
+  steveT += dt * 0.6; // walking speed
+  const totalLen = stevePath.length - 1;
+  const t = steveT % totalLen;
+  const segIdx = Math.floor(t);
+  const segT   = t - segIdx;
+
+  const a = stevePath[segIdx];
+  const b = stevePath[Math.min(segIdx + 1, stevePath.length - 1)];
+
+  const pos = a.clone().lerp(b, segT);
+  steveGroup.position.copy(pos);
+  steveGroup.position.y = pos.y + 1.0;
+
+  // Face direction of travel
+  const dir = b.clone().sub(a);
+  if (dir.length() > 0.01) {
+    const angle = Math.atan2(dir.x, dir.z);
+    steveGroup.rotation.y = angle;
+  }
+
+  // Animate legs/arms walking
+  const walkCycle = Math.sin(steveT * 8) * 0.4;
+  steveGroup.children.forEach(c => {
+    if (c.userData.isLeg)  c.rotation.x = c.userData.side === 'L' ?  walkCycle : -walkCycle;
+    if (c.userData.isArm)  c.rotation.x = c.userData.side === 'L' ? -walkCycle :  walkCycle;
+  });
+}
+
+// ── Simulation ────────────────────────────────────────────────────────────
+let RAIN_TIMESERIES = [
+  [0, 0], [0.25, 0], [0.5, 1.7], [0.75, 5.2], [1.0, 8.4],
+  [1.25, 6.1], [1.5, 3.2], [1.75, 1.0], [2.0, 0.3], [3.0, 0]
+];
+
+function getRainfall(t) {
+  for (let i = 0; i < RAIN_TIMESERIES.length - 1; i++) {
+    const [t0, r0] = RAIN_TIMESERIES[i];
+    const [t1, r1] = RAIN_TIMESERIES[i+1];
+    if (t >= t0 && t <= t1) {
+      return r0 + (r1 - r0) * (t - t0) / (t1 - t0);
+    }
+  }
+  return 0;
+}
+
+function updateSimulation(dt) {
+  if (!simRunning || !model) return;
+
+  simTime += dt * 0.5; // 1 real second = 0.5 sim hours
+  const tHours = simTime;
+  const rain = getRainfall(tHours);
+  const maxT = RAIN_TIMESERIES[RAIN_TIMESERIES.length-1][0];
+
+  if (tHours > maxT + 2) { simTime = 0; }
+
+  // Update stats
+  document.getElementById('stat-time').textContent = `T: ${tHours.toFixed(2)} hrs`;
+  document.getElementById('stat-rain').textContent = `RAIN: ${rain.toFixed(1)} mm/hr`;
+
+  // Estimate total network flow
+  const flowEst = rain * 0.6 * Math.min(1, tHours / 0.5) * (model.junctions.length * 0.2);
+  document.getElementById('stat-flow').textContent = `FLOW: ${flowEst.toFixed(1)} cfs`;
+
+  // Animate water fills
+  worldGroup.children.forEach(obj => {
+    if (obj.userData.isWaterFill) {
+      const flowFrac = Math.min(1, rain / 10) * (0.3 + Math.random() * 0.1);
+      obj.material.opacity = 0.5 + flowFrac * 0.4;
+      obj.material.color.setHex(flowFrac > 0.8 ? 0xff2222 : flowFrac > 0.5 ? 0x4488ff : 0x2255ff);
+    }
+    if (obj.userData.isWater) {
+      const depth = rain / 15 * (obj.userData.node ? 1 : 0.5);
+      obj.position.y = obj.userData.baseY + depth * 0.5;
+      obj.scale.y = 1 + depth * 2;
+      obj.material.opacity = 0.5 + depth * 0.4;
+    }
+  });
+
+  // Rain particles
+  if (rain > 0.5 && !rainActive) toggleRain(true);
+  if (rain < 0.1 && rainActive)  toggleRain(false);
+}
+
+// ── Rain system ───────────────────────────────────────────────────────────
+const rainCanvas = document.getElementById('rain-canvas');
+const rctx = rainCanvas.getContext('2d');
+rainCanvas.width  = window.innerWidth;
+rainCanvas.height = window.innerHeight;
+
+function spawnRainDrops(n) {
+  for (let i = 0; i < n; i++) {
+    rainDrops.push({
+      x: Math.random() * rainCanvas.width,
+      y: Math.random() * rainCanvas.height,
+      len: 8 + Math.random() * 14,
+      speed: 6 + Math.random() * 8,
+      opacity: 0.3 + Math.random() * 0.5
+    });
+  }
+}
+
+function updateRain() {
+  rctx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
+  if (!rainActive) return;
+
+  rctx.strokeStyle = '#88ccff';
+  rainDrops.forEach(d => {
+    rctx.globalAlpha = d.opacity;
+    rctx.lineWidth = 1;
+    rctx.beginPath();
+    rctx.moveTo(d.x, d.y);
+    rctx.lineTo(d.x - d.len * 0.3, d.y + d.len);
+    rctx.stroke();
+    d.y += d.speed;
+    d.x -= d.speed * 0.3;
+    if (d.y > rainCanvas.height || d.x < 0) {
+      d.y = -d.len;
+      d.x = Math.random() * rainCanvas.width;
+    }
+  });
+  rctx.globalAlpha = 1;
+}
+
+function toggleRain(forceState) {
+  rainActive = forceState !== undefined ? forceState : !rainActive;
+  const btn = document.getElementById('btn-rain');
+  const rc  = document.getElementById('rain-canvas');
+  if (rainActive) {
+    btn.textContent = '☁ RAIN: ON';
+    rc.classList.add('raining');
+    spawnRainDrops(200);
+    steveSpeak('Uh oh, it\'s raining! Water is entering the catchments. Watch the pipes fill up!');
+  } else {
+    btn.textContent = '☁ RAIN: OFF';
+    rc.classList.remove('raining');
+    rainDrops = [];
+  }
+}
+
+// ── Element selection & inspector ─────────────────────────────────────────
+function selectElement(mesh) {
+  // Deselect previous
+  if (selectedObj) {
+    selectedObj.material.emissive = new THREE.Color(0x000000);
+  }
+  selectedObj = mesh;
+  mesh.material.emissive = new THREE.Color(0x002200);
+
+  const d   = mesh.userData.data;
+  const typ = mesh.userData.type;
+  let html  = `<div class="panel-title">${mesh.userData.name}</div>`;
+
+  if (typ === 'node') {
+    html += row('Type', d.type);
+    html += row('Elevation', `${d.elev?.toFixed(2) ?? '–'} ft`);
+    html += row('Max Depth', `${d.maxDepth?.toFixed(1) ?? '–'} ft`);
+    html += row('Sim Depth', `${(Math.random()*d.maxDepth*0.4).toFixed(2)} ft`);
+    html += row('Status', 'Normal');
+    steveSpeak(`This is ${d.type} ${mesh.userData.name} at elevation ${d.elev?.toFixed(1)} ft.`);
+  } else if (typ === 'link') {
+    html += row('From', d.from);
+    html += row('To', d.to);
+    html += row('Length', `${d.length?.toFixed(0) ?? '–'} ft`);
+    html += row('Roughness', d.roughness?.toFixed(3) ?? '–');
+    html += row('Flow', `${(Math.random()*5).toFixed(2)} cfs`);
+    steveSpeak(`Conduit ${mesh.userData.name} connects ${d.from} to ${d.to}. Manning's n = ${d.roughness?.toFixed(3)}.`);
+  } else if (typ === 'subcatch') {
+    html += row('Area', `${d.area?.toFixed(1) ?? '–'} ac`);
+    html += row('% Imperv', `${d.imperv ?? '–'}%`);
+    html += row('Outlet', d.outlet ?? '–');
+    html += row('Runoff', `${(Math.random()*2).toFixed(2)} cfs`);
+    steveSpeak(`Subcatchment ${mesh.userData.name}: ${d.area} acres, ${d.imperv}% impervious.`);
+  }
+
+  document.getElementById('inspector-content').innerHTML = html;
+
+  // Highlight in network tree
+  document.querySelectorAll('.net-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.name === mesh.userData.name);
+  });
+}
+
+function row(label, val) {
+  return `<div class="info-row"><span>${label}</span><span class="val">${val}</span></div>`;
+}
+
+// ── Network tree ──────────────────────────────────────────────────────────
+function updateNetworkTree(m) {
+  if (!m) return;
+  const tree = document.getElementById('network-tree');
+  const allNodes = [...m.junctions, ...m.outfalls, ...m.storage];
+  const typeDots = { junction: '#4a9eff', outfall: '#44ff88', storage: '#ffaa22' };
+
+  let html = '';
+  html += `<div class="panel-title" style="margin-top:4px">Nodes (${allNodes.length})</div>`;
+  allNodes.slice(0, 25).forEach(n => {
+    const col = typeDots[n.type] || '#4a9eff';
+    html += `<div class="net-item" data-name="${n.name}" onclick="focusNode('${n.name}')">
+      <div class="dot" style="background:${col}"></div>${n.name}
+    </div>`;
+  });
+  if (allNodes.length > 25) html += `<div class="net-item" style="color:#006633">...+${allNodes.length-25} more</div>`;
+
+  html += `<div class="panel-title" style="margin-top:8px">Links (${m.allLinks.length})</div>`;
+  m.allLinks.slice(0, 20).forEach(l => {
+    html += `<div class="net-item" data-name="${l.name}" onclick="focusLink('${l.name}')">
+      <div class="dot" style="background:#888899"></div>${l.name}
+    </div>`;
+  });
+  if (m.allLinks.length > 20) html += `<div class="net-item" style="color:#006633">...+${m.allLinks.length-20} more</div>`;
+
+  if (m.subcatchments.length > 0) {
+    html += `<div class="panel-title" style="margin-top:8px">Subcatch (${m.subcatchments.length})</div>`;
+    m.subcatchments.slice(0, 10).forEach(s => {
+      html += `<div class="net-item" data-name="${s.name}">
+        <div class="dot" style="background:#3a7a3a"></div>${s.name}
+      </div>`;
+    });
+  }
+
+  tree.innerHTML = html;
+}
+
+function focusNode(name) {
+  const obj = worldGroup.children.find(c => c.userData.name === name && c.userData.type === 'node');
+  if (obj) {
+    camTarget.copy(obj.position);
+    applyOrbit();
+    selectElement(obj);
+  }
+}
+
+function focusLink(name) {
+  const obj = worldGroup.children.find(c => c.userData.name === name && c.userData.type === 'link');
+  if (obj) { camTarget.copy(obj.position); applyOrbit(); selectElement(obj); }
+}
+
+// ── Steve dialog ──────────────────────────────────────────────────────────
+let steveTimer = null;
+function steveSpeak(msg) {
+  const d = document.getElementById('steve-dialog');
+  d.textContent = msg;
+  d.classList.add('show');
+  if (steveTimer) clearTimeout(steveTimer);
+  steveTimer = setTimeout(() => d.classList.remove('show'), 5000);
+}
+
+// ── Camera modes ──────────────────────────────────────────────────────────
+function setCameraISO() {
+  viewMode = 'iso';
+  camTheta = Math.PI * 0.35;
+  camPhi   = Math.PI / 3.5;
+  camDist  = 80;
+  applyOrbit();
+  document.getElementById('btn-view').textContent = 'VIEW: ISO';
+}
+
+function setCameraTop() {
+  viewMode = 'top';
+  camPhi   = 0.02;
+  camDist  = 100;
+  applyOrbit();
+  document.getElementById('btn-view').textContent = 'VIEW: TOP';
+}
+
+function setCameraFP() {
+  viewMode = 'fp';
+  if (steveGroup) {
+    camera.position.copy(steveGroup.position).add(new THREE.Vector3(0, 2, 0));
+    camera.lookAt(steveGroup.position.clone().add(new THREE.Vector3(0, 2, 5)));
+  }
+  document.getElementById('btn-view').textContent = 'VIEW: FP';
+}
+
+function resetCamera() { setCameraISO(); }
+
+function cycleView() {
+  if (viewMode === 'iso') setCameraTop();
+  else if (viewMode === 'top') setCameraFP();
+  else setCameraISO();
+}
+
+// ── Sim controls ──────────────────────────────────────────────────────────
+function toggleSim() {
+  simRunning = !simRunning;
+  const btn = document.getElementById('play-btn');
+  btn.textContent = simRunning ? '⏸ PAUSE' : '▶ PLAY';
+  btn.classList.toggle('playing', simRunning);
+  if (simRunning) steveSpeak('Simulation running! Watch the water rise in the pipes during the storm event.');
+}
+
+// ── Import overlay ────────────────────────────────────────────────────────
+function openImport()  { document.getElementById('import-overlay').classList.add('open'); }
+function closeImport() { document.getElementById('import-overlay').classList.remove('open'); }
+
+// File drag-drop
+const fileDrop = document.getElementById('file-drop');
+fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('dragover'); });
+fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
+fileDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  fileDrop.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+});
+document.getElementById('file-input').addEventListener('change', e => {
+  if (e.target.files[0]) readFile(e.target.files[0]);
+});
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    closeImport();
+    const parsed = parseInp(ev.target.result);
+    model = parsed;
+    buildWorld(parsed);
+    steveSpeak(`Loaded ${file.name}! ${parsed.junctions.length} junctions, ${parsed.conduits.length} conduits.`);
+  };
+  reader.readAsText(file);
+}
+
+// ── Demo models ───────────────────────────────────────────────────────────
+function loadDemo(name) {
+  closeImport();
+  const inp = DEMO_MODELS[name] || DEMO_MODELS['example1'];
+  const parsed = parseInp(inp);
+  model = parsed;
+  buildWorld(parsed);
+}
+
+// ── Toolbar tool selection ────────────────────────────────────────────────
+document.querySelectorAll('.tool-slot').forEach(slot => {
+  slot.addEventListener('click', () => {
+    activeTool = slot.dataset.tool;
+    document.querySelectorAll('.tool-slot').forEach(s => s.classList.remove('active'));
+    slot.classList.add('active');
+    renderer.domElement.style.cursor = activeTool === 'select' ? 'crosshair' : 'cell';
+  });
+});
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const map = { '1':'select','2':'junction','3':'conduit','4':'outfall','5':'subcatch','6':'raingage' };
+  if (map[e.key]) {
+    const slot = document.querySelector(`[data-tool="${map[e.key]}"]`);
+    if (slot) slot.click();
+  }
+  if (e.key === ' ') { e.preventDefault(); toggleSim(); }
+  if (e.key.toLowerCase() === 'r') toggleRain();
+  if (e.key.toLowerCase() === 'v') cycleView();
+});
+
+// ── Resize ────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  rainCanvas.width  = window.innerWidth;
+  rainCanvas.height = window.innerHeight;
+});
+
+// ── Animation loop ────────────────────────────────────────────────────────
+let lastTime = 0;
+function animate(time) {
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, (time - lastTime) / 1000);
+  lastTime = time;
+
+  updateSimulation(dt);
+  updateSteve(dt);
+  updateRain();
+
+  // Gentle sun animation
+  const t = time * 0.0002;
+  sunLight.position.set(50 * Math.cos(t), 80, 50 * Math.sin(t));
+
+  renderer.render(scene, camera);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEMO MODELS
+// ═══════════════════════════════════════════════════════════════════════════
+const DEMO_MODELS = {
+example1: `
+[TITLE]
+Example 1 - Simple Pipe Network
+
+[OPTIONS]
+FLOW_UNITS  CFS
+FLOW_ROUTING  KINWAVE
+START_DATE  01/01/2007
+END_DATE  01/01/2007
+START_TIME  00:00:00
+END_TIME  12:00:00
+
+[RAINGAGES]
+RG1  VOLUME  1:00  1.0  TIMESERIES  TS1
+
+[SUBCATCHMENTS]
+S1  RG1  J1  20  50  400  0.5  0
+S2  RG1  J2  10  25  200  1.0  0
+S3  RG1  J3   8  75  300  2.0  0
+
+[SUBAREAS]
+S1  0.01  0.10  0.05  0.05  25  OUTLET
+S2  0.01  0.10  0.05  0.05  25  OUTLET
+S3  0.01  0.10  0.05  0.05  25  OUTLET
+
+[INFILTRATION]
+S1  3.0  0.5  4.14  7  0
+S2  3.0  0.5  4.14  7  0
+S3  3.0  0.5  4.14  7  0
+
+[JUNCTIONS]
+J1  4.0  10  0  0  0
+J2  3.0  10  0  0  0
+J3  2.0  10  0  0  0
+J4  1.0  10  0  0  0
+
+[OUTFALLS]
+Out1  0.0  FREE
+
+[CONDUITS]
+C1  J1  J2  400  0.013  0  0  0  0
+C2  J2  J3  300  0.013  0  0  0  0
+C3  J3  J4  200  0.013  0  0  0  0
+C4  J4  Out1  150  0.013  0  0  0  0
+
+[XSECTIONS]
+C1  CIRCULAR  1.5  0  0  0  1
+C2  CIRCULAR  1.5  0  0  0  1
+C3  CIRCULAR  1.0  0  0  0  1
+C4  CIRCULAR  1.0  0  0  0  1
+
+[TIMESERIES]
+TS1  0:00  0.00
+TS1  1:00  0.10
+TS1  1:15  0.40
+TS1  1:30  0.40
+TS1  1:45  0.10
+TS1  2:00  0.00
+
+[COORDINATES]
+J1   1500  5000
+J2   3000  5000
+J3   4500  5000
+J4   6000  5000
+Out1  7500  5000
+
+[POLYGONS]
+S1  1000  5500
+S1  2000  5500
+S1  2000  4500
+S1  1000  4500
+S2  2500  5500
+S2  3500  5500
+S2  3500  4500
+S2  2500  4500
+S3  4000  5500
+S3  5000  5500
+S3  5000  4500
+S3  4000  4500
+`,
+
+example2: `
+[TITLE]
+Example 2 - Storage and Controls
+
+[OPTIONS]
+FLOW_UNITS  CFS
+FLOW_ROUTING  DYNWAVE
+START_DATE  01/01/2007
+END_DATE  01/01/2007
+
+[RAINGAGES]
+RG1  VOLUME  0:15  1.0  TIMESERIES  TS1
+
+[SUBCATCHMENTS]
+S1  RG1  J1  40  70  800  0.5  0
+S2  RG1  J3  10  50  200  0.5  0
+
+[SUBAREAS]
+S1  0.01  0.10  0.05  0.05  25  OUTLET
+S2  0.01  0.10  0.05  0.05  25  OUTLET
+
+[INFILTRATION]
+S1  3.0  0.5  4.14  7  0
+S2  3.0  0.5  4.14  7  0
+
+[JUNCTIONS]
+J1  4.5  10  0  0  0
+J2  3.0  10  0  0  0
+J3  1.0  10  0  0  0
+
+[OUTFALLS]
+Out1  0.0  FREE
+
+[STORAGE]
+SU1  2.0  8.0  0  FUNCTIONAL  0  1000  0  500  0  0  0
+
+[CONDUITS]
+C1  J1  J2  400  0.013  0  0  0  0
+C2  J2  SU1  200  0.013  0  0  0  0
+C3  J3  Out1  100  0.013  0  0  0  0
+
+[ORIFICES]
+Or1  SU1  J3  BOTTOM  0.0  0.65  NO  0
+
+[WEIRS]
+Wr1  SU1  Out1  TRANSVERSE  5.0  3.33  NO  0  0
+
+[XSECTIONS]
+C1  CIRCULAR  1.5  0  0  0  1
+C2  CIRCULAR  2.0  0  0  0  1
+C3  CIRCULAR  1.5  0  0  0  1
+Or1  CIRCULAR  1.0  0  0  0
+Wr1  RECT_OPEN  2.0  10.0  0  0
+
+[TIMESERIES]
+TS1  0:00  0.00
+TS1  0:15  0.25
+TS1  0:30  1.00
+TS1  0:45  0.25
+TS1  1:00  0.00
+
+[COORDINATES]
+J1   1000  5000
+J2   2500  5000
+SU1  4000  5000
+J3   5500  5000
+Out1  7000  5000
+
+[POLYGONS]
+S1  500   5500
+S1  1500  5500
+S1  1500  4500
+S1  500   4500
+S2  5000  5500
+S2  6000  5500
+S2  6000  4500
+S2  5000  4500
+`,
+
+example3: `
+[TITLE]
+Example 3 - CSO with RDII
+
+[OPTIONS]
+FLOW_UNITS  CFS
+FLOW_ROUTING  DYNWAVE
+START_DATE  01/01/2007
+END_DATE  01/01/2007
+
+[RAINGAGES]
+RG1  VOLUME  0:15  1.0  TIMESERIES  TS_RAIN
+
+[SUBCATCHMENTS]
+S1  RG1  J1  30  45  600  0.5  0
+S2  RG1  J2  20  40  400  0.5  0
+S3  RG1  J3  25  55  500  0.5  0
+
+[SUBAREAS]
+S1  0.01  0.10  0.05  0.05  25  OUTLET
+S2  0.01  0.10  0.05  0.05  25  OUTLET
+S3  0.01  0.10  0.05  0.05  25  OUTLET
+
+[INFILTRATION]
+S1  3.0  0.5  4.14  7  0
+S2  3.0  0.5  4.14  7  0
+S3  3.0  0.5  4.14  7  0
+
+[JUNCTIONS]
+J1  5.0  12  0  0  0
+J2  4.0  12  0  0  0
+J3  3.0  12  0  0  0
+J4  2.0  12  0  0  0
+JCSO  1.0  14  0  2.0  500
+
+[OUTFALLS]
+Out_STP  0.0  FREE
+Out_CSO  0.0  FREE
+
+[CONDUITS]
+C1  J1  J2  400  0.013  0  0  0  0
+C2  J2  J3  350  0.013  0  0  0  0
+C3  J3  J4  300  0.013  0  0  0  0
+C4  J4  JCSO  200  0.013  0  0  0  0
+C5  JCSO  Out_STP  100  0.013  0  0  0  0
+
+[WEIRS]
+CSO_Weir  JCSO  Out_CSO  TRANSVERSE  2.0  3.33  NO  0  0
+
+[XSECTIONS]
+C1  CIRCULAR  1.5  0  0  0  1
+C2  CIRCULAR  1.5  0  0  0  1
+C3  CIRCULAR  2.0  0  0  0  1
+C4  CIRCULAR  2.0  0  0  0  1
+C5  CIRCULAR  2.0  0  0  0  1
+CSO_Weir  RECT_OPEN  1.0  5.0  0  0
+
+[TIMESERIES]
+TS_RAIN  0:00  0.00
+TS_RAIN  2:00  0.25
+TS_RAIN  2:15  0.75
+TS_RAIN  2:30  0.50
+TS_RAIN  3:00  0.00
+
+[COORDINATES]
+J1     1000  5000
+J2     2500  5000
+J3     4000  5000
+J4     5500  5000
+JCSO   7000  5000
+Out_STP  8500  5000
+Out_CSO  7000  3500
+
+[POLYGONS]
+S1  500   5500
+S1  1500  5500
+S1  1500  4500
+S1  500   4500
+S2  2000  5500
+S2  3000  5500
+S2  3000  4500
+S2  2000  4500
+S3  3500  5500
+S3  4500  5500
+S3  4500  4500
+S3  3500  4500
+`,
+
+example5: `
+[TITLE]
+Example 5 - Pump Station
+
+[OPTIONS]
+FLOW_UNITS  CFS
+FLOW_ROUTING  DYNWAVE
+FORCE_MAIN_EQUATION  H-W
+START_DATE  01/01/2007
+END_DATE  01/02/2007
+
+[RAINGAGES]
+RG1  VOLUME  1:00  1.0  TIMESERIES  TS_RAIN
+
+[SUBCATCHMENTS]
+S1  RG1  J1  50  60  800  0.5  0
+
+[SUBAREAS]
+S1  0.01  0.10  0.05  0.05  25  OUTLET
+
+[INFILTRATION]
+S1  3.0  0.5  4.14  7  0
+
+[JUNCTIONS]
+J1  10.0  15  0  0  0
+J2   9.0  15  0  0  0
+FM_Node  20.0  10  0  0  0
+
+[STORAGE]
+WetWell  0.0  15.0  4.0  FUNCTIONAL  0  314  0  0  0  0  0
+
+[OUTFALLS]
+Out_FM  25.0  FREE
+
+[CONDUITS]
+C1  J1  J2  300  0.013  0  0  0  0
+C2  J2  WetWell  200  0.013  0  0  0  0
+FM1  FM_Node  Out_FM  500  130  0  0  0  0
+
+[PUMPS]
+P1  WetWell  FM_Node  PC1  OFF  0  2.0
+
+[XSECTIONS]
+C1  CIRCULAR  1.5  0  0  0  1
+C2  CIRCULAR  1.5  0  0  0  1
+FM1  CIRCULAR  0.667  0  0  0  1
+
+[CURVES]
+PC1  PUMP3  0   5.0
+PC1         4   4.0
+PC1         8   2.5
+PC1         12  0.5
+
+[TIMESERIES]
+TS_RAIN  0:00  0.00
+TS_RAIN  1:00  0.20
+TS_RAIN  2:00  0.50
+TS_RAIN  3:00  0.00
+
+[COORDINATES]
+J1       1000  5000
+J2       2500  5000
+WetWell  4000  5000
+FM_Node  4000  7000
+Out_FM   5500  7000
+
+[POLYGONS]
+S1  500   5500
+S1  1500  5500
+S1  1500  4500
+S1  500   4500
+`,
+
+dual: `
+[TITLE]
+Dual Drainage System
+
+[OPTIONS]
+FLOW_UNITS  CFS
+FLOW_ROUTING  DYNWAVE
+ALLOW_PONDING  YES
+
+[RAINGAGES]
+RG1  INTENSITY  0:05  1.0  TIMESERIES  TS_RAIN
+
+[SUBCATCHMENTS]
+Block_NW  RG1  Gutter1  0.5  85  150  1.0  300
+Block_NE  RG1  Gutter2  0.5  85  150  1.0  300
+Block_SW  RG1  Gutter3  0.5  85  150  1.0  300
+Block_SE  RG1  Gutter4  0.5  85  150  1.0  300
+
+[SUBAREAS]
+Block_NW  0.011  0.20  0.05  0.10  25  OUTLET
+Block_NE  0.011  0.20  0.05  0.10  25  OUTLET
+Block_SW  0.011  0.20  0.05  0.10  25  OUTLET
+Block_SE  0.011  0.20  0.05  0.10  25  OUTLET
+
+[INFILTRATION]
+Block_NW  3.0  0.5  4.14  7  0
+Block_NE  3.0  0.5  4.14  7  0
+Block_SW  3.0  0.5  4.14  7  0
+Block_SE  3.0  0.5  4.14  7  0
+
+[JUNCTIONS]
+MJ1  5.0  8  0  0  500
+MJ2  4.5  8  0  0  500
+MJ3  4.0  8  0  0  500
+MJ4  3.5  8  0  0  500
+Gutter1  5.1  0.5  0  0  0
+Gutter2  5.1  0.5  0  0  0
+Gutter3  5.0  0.5  0  0  0
+Gutter4  5.0  0.5  0  0  0
+Inlet1  5.05  0.5  0  0  0
+Inlet2  5.05  0.5  0  0  0
+
+[OUTFALLS]
+Out_Minor  3.0  FREE
+
+[CONDUITS]
+MC1  MJ1  MJ2  200  0.013  0  0  0  0
+MC2  MJ2  MJ3  200  0.013  0  0  0  0
+MC3  MJ3  MJ4  200  0.013  0  0  0  0
+MC4  MJ4  Out_Minor  100  0.013  0  0  0  0
+GC1  Gutter1  Inlet1  100  0.016  0  0  0  0
+GC2  Gutter2  Inlet1  100  0.016  0  0  0  0
+GC3  Gutter3  Inlet2  100  0.016  0  0  0  0
+GC4  Gutter4  Inlet2  100  0.016  0  0  0  0
+
+[ORIFICES]
+Inlet_A  Inlet1  MJ1  SIDE  0.0  0.65  NO
+Inlet_B  Inlet2  MJ2  SIDE  0.0  0.65  NO
+
+[XSECTIONS]
+MC1  CIRCULAR  1.0  0  0  0  1
+MC2  CIRCULAR  1.0  0  0  0  1
+MC3  CIRCULAR  1.25  0  0  0  1
+MC4  CIRCULAR  1.25  0  0  0  1
+GC1  TRAPEZOIDAL  0.33  20  1.5  1.5  0
+GC2  TRAPEZOIDAL  0.33  20  1.5  1.5  0
+GC3  TRAPEZOIDAL  0.33  20  1.5  1.5  0
+GC4  TRAPEZOIDAL  0.33  20  1.5  1.5  0
+Inlet_A  RECT_CLOSED  0.33  1.5  0  0
+Inlet_B  RECT_CLOSED  0.33  1.5  0  0
+
+[TIMESERIES]
+TS_RAIN  0:00  0.00
+TS_RAIN  1:00  3.00
+TS_RAIN  1:30  5.00
+TS_RAIN  2:00  1.50
+TS_RAIN  3:00  0.00
+
+[COORDINATES]
+MJ1  3000  5000
+MJ2  4500  5000
+MJ3  6000  5000
+MJ4  7500  5000
+Out_Minor  8500  5000
+Gutter1  2000  6500
+Gutter2  4000  6500
+Gutter3  2000  3500
+Gutter4  4000  3500
+Inlet1  3000  6500
+Inlet2  3000  3500
+
+[POLYGONS]
+Block_NW  1000  7000
+Block_NW  2500  7000
+Block_NW  2500  5500
+Block_NW  1000  5500
+Block_NE  3500  7000
+Block_NE  5000  7000
+Block_NE  5000  5500
+Block_NE  3500  5500
+Block_SW  1000  4500
+Block_SW  2500  4500
+Block_SW  2500  3000
+Block_SW  1000  3000
+Block_SE  3500  4500
+Block_SE  5000  4500
+Block_SE  5000  3000
+Block_SE  3500  3000
+`,
+
+lid: `
+[TITLE]
+LID Bioretention Example
+
+[OPTIONS]
+FLOW_UNITS  CFS
+INFILTRATION  GREEN_AMPT
+FLOW_ROUTING  DYNWAVE
+
+[RAINGAGES]
+RG1  INTENSITY  0:05  1.0  TIMESERIES  TS_RAIN
+
+[SUBCATCHMENTS]
+S1  RG1  J1  5.0  80  200  1.5  500
+S2  RG1  J2  8.0  40  280  0.5  400
+
+[SUBAREAS]
+S1  0.011  0.10  0.05  0.05  25  OUTLET
+S2  0.011  0.10  0.05  0.05  25  OUTLET
+
+[INFILTRATION]
+S1  3.5  0.52  0.26
+S2  3.5  0.52  0.26
+
+[JUNCTIONS]
+J1  2.0  10  0  0  0
+J2  1.0  10  0  0  0
+J3  0.5  10  0  0  0
+
+[OUTFALLS]
+Out1  0.0  FREE
+
+[CONDUITS]
+C1  J1  J3  300  0.015  0  0  0  0
+C2  J2  J3  200  0.015  0  0  0  0
+C3  J3  Out1  100  0.015  0  0  0  0
+
+[XSECTIONS]
+C1  CIRCULAR  1.0  0  0  0  1
+C2  CIRCULAR  1.0  0  0  0  1
+C3  CIRCULAR  1.0  0  0  0  1
+
+[TIMESERIES]
+TS_RAIN  0:00  0.00
+TS_RAIN  1:00  1.20
+TS_RAIN  1:30  2.40
+TS_RAIN  2:00  0.60
+TS_RAIN  3:00  0.00
+
+[COORDINATES]
+J1   2000  6000
+J2   4000  6000
+J3   5000  5000
+Out1  6500  5000
+
+[POLYGONS]
+S1  1000  6500
+S1  3000  6500
+S1  3000  5500
+S1  1000  5500
+S2  3500  6500
+S2  5500  6500
+S2  5500  5500
+S2  3500  5500
+`
+};
+
+// ── Startup sequence ──────────────────────────────────────────────────────
+function startup() {
+  const fill  = document.getElementById('loading-fill');
+  const loadP = document.getElementById('loading-msg');
+  const msgs  = [
+    'Generating terrain...',
+    'Loading pipe blocks...',
+    'Spawning Steve...',
+    'Building SWMM world...'
+  ];
+  let pct = 0, msgIdx = 0;
+
+  const iv = setInterval(() => {
+    pct += 20;
+    fill.style.width = pct + '%';
+    if (msgIdx < msgs.length) loadP.textContent = msgs[msgIdx++];
+
+    if (pct >= 100) {
+      clearInterval(iv);
+      loadP.textContent = 'Loading Example 1 — Simple pipe network...';
+      fill.style.width = '100%';
+
+      // Give Three.js one full frame to finish init before building geometry
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Build the world first so it's visible when loading fades
+          loadDemo('example1');
+
+          // Then fade the loading screen out
+          const loading = document.getElementById('loading');
+          loading.style.transition = 'opacity 0.6s';
+          loading.style.opacity = '0';
+          setTimeout(() => {
+            loading.style.display = 'none';
+            steveSpeak('Welcome to SWMMCRAFT 3D! I\'m Steve. Drag to orbit, scroll to zoom, SPACE to run the storm!');
+          }, 650);
+        });
+      });
+    }
+  }, 220);
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────
+startup();
+animate(0);
+</script>
+</body>
+</html>
