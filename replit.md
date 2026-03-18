@@ -16,7 +16,7 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: Local React state in the `Home` page component manages the entire SWMM model, simulation state, tutorial progress, budget, and challenge level. React Query (`@tanstack/react-query`) handles server-state for project CRUD operations.
 - **UI Components**: Shadcn/ui component library (new-york style) with Radix UI primitives. Custom SWMM-specific components live in `client/src/components/SWMM/`.
 - **Styling**: Tailwind CSS v4 (via `@tailwindcss/vite` plugin) with CSS variables for theming. Minecraft-inspired pixel fonts (`Press Start 2P`, `VT323`) from Google Fonts.
-- **Canvas Rendering**: The map view and profile view use HTML5 Canvas (`<canvas>`) for rendering nodes, links, subcatchments, and the Steve character. No WebGL or third-party canvas library.
+- **Canvas Rendering**: The map view uses HTML5 Canvas (`<canvas>`) for 2D rendering. A Three.js WebGL 3D view (`ThreeCanvas.tsx`) provides a Minecraft-style block-based visualization with OrbitControls, animated water, day/night cycle, rain particles, and an animated Steve character walking conduit paths. Toggle between 2D/3D via the toolbar.
 - **Sound**: Web Audio API generates Minecraft-style sound effects (clicks, plops) programmatically — no audio files needed.
 
 ### Key Frontend Modules
@@ -71,6 +71,7 @@ The model data (nodes, links, subcatchments) is stored as a single JSONB blob in
 - **Express** — HTTP server framework
 - **@tanstack/react-query** — Server state management on the client
 - **Radix UI / shadcn** — Accessible UI component primitives
+- **three** — 3D rendering engine for the Minecraft-style WebGL view
 - **wouter** — Lightweight client-side router
 - **Vite** — Frontend build tool and dev server
 - **esbuild** — Server bundler for production builds

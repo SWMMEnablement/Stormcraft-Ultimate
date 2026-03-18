@@ -21,6 +21,7 @@ import { DemoOverlay } from '@/components/SWMM/DemoOverlay';
 import { DemoModelPicker } from '@/components/SWMM/DemoModelPicker';
 import { SwmmEngine, applySimStepToModel } from '@/lib/swmm-engine';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ThreeCanvas } from '@/components/SWMM/ThreeCanvas';
 
 export default function Home() {
   const [model, setModel] = useState<SWMMState>({
@@ -265,20 +266,32 @@ export default function Home() {
                         <div className="h-full relative flex flex-col">
                             <div className="flex-1 relative">
                                 <Minimap nodes={model.nodes} links={model.links} steve={steve} />
-                                <MapCanvas 
-                                   nodes={model.nodes}
-                                   links={model.links}
-                                   subcatchments={model.subcatchments}
-                                   tool={activeTool}
-                                   selectedId={selectedId}
-                                   onSelect={setSelectedId}
-                                   onAddNode={handleAddNode}
-                                   onAddLink={handleAddLink}
-                                   onAddSubcatchment={handleAddSubcatchment}
-                                   is3D={is3D}
-                                   simulationTime={simTime}
-                                   steve={steve}
-                                />
+                                {is3D ? (
+                                  <ThreeCanvas
+                                    nodes={model.nodes}
+                                    links={model.links}
+                                    subcatchments={model.subcatchments}
+                                    selectedId={selectedId}
+                                    onSelect={setSelectedId}
+                                    simulationTime={simTime}
+                                    steve={steve}
+                                  />
+                                ) : (
+                                  <MapCanvas 
+                                    nodes={model.nodes}
+                                    links={model.links}
+                                    subcatchments={model.subcatchments}
+                                    tool={activeTool}
+                                    selectedId={selectedId}
+                                    onSelect={setSelectedId}
+                                    onAddNode={handleAddNode}
+                                    onAddLink={handleAddLink}
+                                    onAddSubcatchment={handleAddSubcatchment}
+                                    is3D={is3D}
+                                    simulationTime={simTime}
+                                    steve={steve}
+                                  />
+                                )}
 
                                 <TutorialOverlay
                                   tutorial={tutorial}
