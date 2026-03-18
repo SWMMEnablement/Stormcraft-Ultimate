@@ -37,6 +37,8 @@ export default function Home() {
   const [is3D, setIs3D] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [showMobileProps, setShowMobileProps] = useState(false);
+  const [showMobileControls, setShowMobileControls] = useState(false);
 
   const [steve, setSteve] = useState<SteveState>(INITIAL_STEVE);
   const [tutorial, setTutorial] = useState<TutorialState>(INITIAL_TUTORIAL);
@@ -345,7 +347,7 @@ export default function Home() {
         }
       />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={80}>
                 <ResizablePanelGroup direction="vertical">
@@ -386,57 +388,74 @@ export default function Home() {
                                   onAutoAdvance={handleTutorialAutoAdvance}
                                 />
 
-                                <div className="absolute top-4 left-4 w-56 space-y-2 z-20">
-                                    <SimulationControls 
-                                      currentTime={simTime}
-                                      isPlaying={isPlaying}
-                                      onPlayPause={handlePlayPause}
-                                      onTimeChange={setSimTime}
-                                      onSpeedChange={setSimSpeed}
-                                      simSpeed={simSpeed}
-                                    />
+                                <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 space-y-2 z-20 ${showMobileControls ? 'w-48 sm:w-56' : 'sm:w-56'}`}>
                                     <button
-                                      onClick={handleRunSwmm5}
-                                      disabled={isRunningSwmm || model.nodes.length === 0}
-                                      data-testid="button-run-swmm5"
-                                      title="Run your model through the real EPA SWMM5 hydraulic engine and view the full report"
-                                      className="w-full"
+                                      className="sm:hidden mc-btn-sm"
+                                      onClick={() => setShowMobileControls(!showMobileControls)}
+                                      data-testid="button-toggle-mobile-controls"
                                       style={{
-                                        background: isRunningSwmm ? '#333' : '#1a3a5c',
-                                        color: isRunningSwmm ? '#888' : '#55CCFF',
-                                        border: '2px solid #4488CC',
-                                        padding: '6px 8px',
-                                        fontFamily: '"Press Start 2P", monospace',
+                                        background: 'rgba(0,0,0,0.85)',
+                                        border: '2px solid #555',
+                                        padding: '6px 10px',
                                         fontSize: 8,
-                                        cursor: isRunningSwmm ? 'wait' : 'pointer',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: 1,
-                                        imageRendering: 'pixelated',
+                                        fontFamily: '"Press Start 2P", monospace',
+                                        color: '#55FF55',
                                       }}
                                     >
-                                      {isRunningSwmm ? 'RUNNING ENGINE...' : 'RUN SWMM5 ENGINE'}
+                                      {showMobileControls ? 'HIDE CONTROLS' : 'CONTROLS'}
                                     </button>
-                                    <button
-                                      onClick={() => setShowSnapshots(true)}
-                                      data-testid="button-open-snapshots"
-                                      title="Save and compare different design iterations"
-                                      className="w-full"
-                                      style={{
-                                        background: '#3a2a0a',
-                                        color: '#FFAA00',
-                                        border: '2px solid #CC8800',
-                                        padding: '6px 8px',
-                                        fontFamily: '"Press Start 2P", monospace',
-                                        fontSize: 8,
-                                        cursor: 'pointer',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: 1,
-                                        imageRendering: 'pixelated',
-                                      }}
-                                    >
-                                      SNAPSHOTS ({snapshots.length})
-                                    </button>
-                                    <BudgetBar model={model} budget={budget} />
+                                    <div className={`${showMobileControls ? 'block' : 'hidden'} sm:block space-y-2`}>
+                                      <SimulationControls 
+                                        currentTime={simTime}
+                                        isPlaying={isPlaying}
+                                        onPlayPause={handlePlayPause}
+                                        onTimeChange={setSimTime}
+                                        onSpeedChange={setSimSpeed}
+                                        simSpeed={simSpeed}
+                                      />
+                                      <button
+                                        onClick={handleRunSwmm5}
+                                        disabled={isRunningSwmm || model.nodes.length === 0}
+                                        data-testid="button-run-swmm5"
+                                        title="Run your model through the real EPA SWMM5 hydraulic engine and view the full report"
+                                        className="w-full"
+                                        style={{
+                                          background: isRunningSwmm ? '#333' : '#1a3a5c',
+                                          color: isRunningSwmm ? '#888' : '#55CCFF',
+                                          border: '2px solid #4488CC',
+                                          padding: '6px 8px',
+                                          fontFamily: '"Press Start 2P", monospace',
+                                          fontSize: 8,
+                                          cursor: isRunningSwmm ? 'wait' : 'pointer',
+                                          textTransform: 'uppercase',
+                                          letterSpacing: 1,
+                                          imageRendering: 'pixelated',
+                                        }}
+                                      >
+                                        {isRunningSwmm ? 'RUNNING ENGINE...' : 'RUN SWMM5 ENGINE'}
+                                      </button>
+                                      <button
+                                        onClick={() => setShowSnapshots(true)}
+                                        data-testid="button-open-snapshots"
+                                        title="Save and compare different design iterations"
+                                        className="w-full"
+                                        style={{
+                                          background: '#3a2a0a',
+                                          color: '#FFAA00',
+                                          border: '2px solid #CC8800',
+                                          padding: '6px 8px',
+                                          fontFamily: '"Press Start 2P", monospace',
+                                          fontSize: 8,
+                                          cursor: 'pointer',
+                                          textTransform: 'uppercase',
+                                          letterSpacing: 1,
+                                          imageRendering: 'pixelated',
+                                        }}
+                                      >
+                                        SNAPSHOTS ({snapshots.length})
+                                      </button>
+                                      <BudgetBar model={model} budget={budget} />
+                                    </div>
                                 </div>
 
                                 <Toolbar
@@ -447,9 +466,25 @@ export default function Home() {
                                   toggle3D={() => setIs3D(!is3D)}
                                   is3D={is3D}
                                 />
+
+                                <button
+                                  className="md:hidden absolute top-2 right-2 z-20 mc-btn-sm"
+                                  onClick={() => setShowMobileProps(!showMobileProps)}
+                                  data-testid="button-toggle-mobile-props"
+                                  style={{
+                                    background: showMobileProps ? '#555' : 'rgba(0,0,0,0.85)',
+                                    border: '2px solid #888',
+                                    padding: '6px 10px',
+                                    fontSize: 8,
+                                    fontFamily: '"Press Start 2P", monospace',
+                                    color: '#ddd',
+                                  }}
+                                >
+                                  {showMobileProps ? 'HIDE PROPS' : 'PROPS'}
+                                </button>
                                 
                                 {challenge && (
-                                  <div className="absolute bottom-16 right-4 bg-black/80 border-2 border-gray-600 p-2 max-w-48 z-20" data-testid="challenge-info">
+                                  <div className="absolute bottom-16 right-2 sm:right-4 bg-black/80 border-2 border-gray-600 p-2 max-w-48 z-20" data-testid="challenge-info">
                                     <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '7px' }} className="text-yellow-400">
                                       {challenge.emoji} {challenge.name}
                                     </div>
@@ -478,15 +513,35 @@ export default function Home() {
                 </ResizablePanelGroup>
             </ResizablePanel>
             
-            <ResizableHandle withHandle />
+            <ResizableHandle withHandle className="hidden md:flex" />
             
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+            <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="hidden md:block">
                 <PropertiesPanel 
                    selectedElement={selectedElement}
                    onUpdate={handleUpdateElement}
                 />
             </ResizablePanel>
         </ResizablePanelGroup>
+
+        {showMobileProps && (
+          <div
+            className="md:hidden absolute top-0 right-0 bottom-0 w-72 z-40 overflow-auto"
+            style={{ background: 'rgba(0,0,0,0.95)', borderLeft: '2px solid #555' }}
+            data-testid="mobile-props-panel"
+          >
+            <button
+              onClick={() => setShowMobileProps(false)}
+              className="mc-btn-sm w-full"
+              style={{ borderBottom: '1px solid #555', borderRadius: 0, textAlign: 'center' }}
+            >
+              CLOSE PROPERTIES
+            </button>
+            <PropertiesPanel 
+               selectedElement={selectedElement}
+               onUpdate={handleUpdateElement}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

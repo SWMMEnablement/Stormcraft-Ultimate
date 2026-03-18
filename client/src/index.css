@@ -234,6 +234,26 @@
   border: 2px solid #333;
 }
 
+.toolbar-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.toolbar-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .mc-btn-sm {
+    font-size: 6px;
+    padding: 3px 6px;
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 @keyframes flood-pulse {
   from { opacity: 0.6; }
   to   { opacity: 1; }

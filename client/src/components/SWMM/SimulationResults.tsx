@@ -200,41 +200,30 @@ export function SimulationResults({ inpContent, rptContent, onClose }: Simulatio
   const parsed = useMemo(() => parseRpt(rptContent), [rptContent]);
 
   const tabStyle = (tab: Tab) => ({
-    padding: '6px 16px',
+    padding: '4px 10px',
     background: activeTab === tab ? '#333' : '#111',
     color: activeTab === tab ? '#55FF55' : '#888',
     border: activeTab === tab ? '2px solid #55FF55' : '2px solid #555',
     borderBottom: activeTab === tab ? 'none' : '2px solid #555',
     cursor: 'pointer' as const,
     fontFamily: '"Press Start 2P", monospace',
-    fontSize: 9,
+    fontSize: 8,
     textTransform: 'uppercase' as const,
   });
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.9)',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 16,
-      }}
+      className="fixed inset-0 z-[1000] flex flex-col p-2 sm:p-4"
+      style={{ background: 'rgba(0,0,0,0.9)' }}
       data-testid="sim-results-overlay"
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <h2 style={{
+      <div className="flex justify-between items-center mb-2 gap-2">
+        <h2 className="text-xs sm:text-sm" style={{
           fontFamily: '"Press Start 2P", monospace',
-          fontSize: 14,
           color: '#55FF55',
           textShadow: '0 0 8px #00ff00',
         }}>
-          SWMM5 ENGINE RESULTS
+          SWMM5 RESULTS
         </h2>
         <button
           onClick={onClose}

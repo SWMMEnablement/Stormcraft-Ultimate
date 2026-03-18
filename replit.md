@@ -34,6 +34,14 @@ Preferred communication style: Simple, everyday language.
 - `client/src/lib/sound.ts` — Web Audio synthesized sound effects
 - `client/src/components/SWMM/SnapshotPanel.tsx` — Snapshot save/restore/compare panel with diff stats, engineering metrics, and localStorage persistence
 
+### Mobile Responsiveness
+- **Header** (`Header.tsx`): Hamburger menu (`☰/✕`) replaces desktop buttons below `lg` breakpoint. Project manager/demo/import slots hidden below `md` and moved into the hamburger dropdown.
+- **Toolbar** (`Toolbar.tsx`): Horizontally scrollable on mobile with hidden scrollbar. Tool buttons use `clamp(44px, 8vw, 52px)` for minimum 44px touch targets. Slot numbers and active labels hidden on small screens.
+- **Home Layout** (`Home.tsx`): Properties panel hidden below `md` with a "PROPS" toggle button that opens a slide-in overlay (z-40). Simulation controls hidden below `sm` behind a "CONTROLS" toggle. Challenge info repositioned for mobile.
+- **Overlays** (SimulationResults, SnapshotPanel): Use responsive padding (`p-2 sm:p-4`), smaller tab/header text on mobile.
+- **CSS** (`index.css`): `.mc-btn-sm` gets `min-height: 44px; min-width: 44px` on mobile for proper touch targets. `.toolbar-scroll` class hides scrollbar for toolbar overflow.
+- **Z-index layers**: z-20 (canvas overlays), z-30 (toolbar), z-40 (mobile props panel), z-50 (header menu), z-[1000] (full-screen overlays)
+
 ### Backend (Express + Node.js)
 - **Runtime**: Node.js with Express, written in TypeScript and run via `tsx`
 - **API**: RESTful JSON API under `/api/projects` supporting full CRUD (GET, POST, PATCH, DELETE)

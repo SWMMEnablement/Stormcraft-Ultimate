@@ -262,23 +262,13 @@ export function SnapshotPanel({ snapshots, currentModel, onSave, onRestore, onDe
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.92)',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 20,
-      }}
+      className="fixed inset-0 z-[1000] flex flex-col p-3 sm:p-5"
+      style={{ background: 'rgba(0,0,0,0.92)' }}
       data-testid="snapshot-panel"
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ ...mcFont, fontSize: 14, color: '#FFAA00', textShadow: '0 0 8px #ff8800' }}>
-          DESIGN SNAPSHOTS
+      <div className="flex justify-between items-center mb-3 gap-2">
+        <h2 className="text-xs sm:text-sm" style={{ ...mcFont, color: '#FFAA00', textShadow: '0 0 8px #ff8800' }}>
+          SNAPSHOTS
         </h2>
         <button
           onClick={onClose}

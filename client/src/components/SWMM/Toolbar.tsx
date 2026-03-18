@@ -157,11 +157,11 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
   };
 
   return (
-    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-30 pointer-events-none" data-testid="toolbar-hotbar">
+    <div className="absolute bottom-0 left-0 right-0 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-30 pointer-events-none" data-testid="toolbar-hotbar">
       <div
-        className="flex items-end gap-1 pointer-events-auto"
+        className="flex items-end gap-0.5 sm:gap-1 pointer-events-auto overflow-x-auto toolbar-scroll"
         style={{
-          padding: '6px 8px',
+          padding: '4px 6px',
           background: 'rgba(0,0,0,0.75)',
           border: '2px solid #aaa',
           borderBottom: 'none',
@@ -174,10 +174,10 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
               key={tool.id}
               data-testid={`button-tool-${tool.id}`}
               onClick={() => handleToolClick(tool.id)}
-              className="flex flex-col items-center justify-center relative"
+              className="flex flex-col items-center justify-center relative shrink-0"
               style={{
-                width: 52,
-                height: 52,
+                width: 'clamp(44px, 8vw, 52px)',
+                height: 'clamp(44px, 8vw, 52px)',
                 background: isActive ? '#555' : '#2a2a2a',
                 border: isActive ? '2px solid #fff' : '2px solid #555',
                 cursor: 'pointer',
@@ -192,7 +192,7 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
             >
               <PixelIcon type={tool.id} />
               <span
-                className="absolute"
+                className="absolute hidden sm:block"
                 style={{
                   top: 2,
                   left: 4,
@@ -206,7 +206,7 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
               </span>
               {isActive && (
                 <span
-                  className="absolute whitespace-nowrap"
+                  className="absolute whitespace-nowrap hidden sm:block"
                   style={{
                     bottom: -14,
                     fontFamily: '"Press Start 2P", monospace',
@@ -221,14 +221,14 @@ export function Toolbar({ activeTool, onToolChange, toggle3D, is3D }: ToolbarPro
             </button>
           );
         })}
-        <div style={{ width: 4 }} />
+        <div style={{ width: 4 }} className="shrink-0" />
         <button
           data-testid="button-toggle-3d"
           onClick={() => { playClick(); toggle3D(); }}
-          className="flex items-center justify-center"
+          className="flex items-center justify-center shrink-0"
           style={{
-            width: 52,
-            height: 52,
+            width: 'clamp(44px, 8vw, 52px)',
+            height: 'clamp(44px, 8vw, 52px)',
             background: is3D ? '#5c2d8c' : '#2a2a2a',
             border: is3D ? '2px solid #a569bd' : '2px solid #555',
             cursor: 'pointer',
