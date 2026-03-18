@@ -75,10 +75,15 @@ export function Header({ onUndo, onRedo, onCopy, onPaste, onAutoLayout, onExport
           }}
           data-testid="mobile-menu"
         >
-          <div className="md:hidden flex flex-col gap-1 pb-2 mb-2" style={{ borderBottom: '1px solid #444' }}>
-            {projectManagerSlot}
-            {demoPickerSlot}
-            {importSlot}
+          <div className="flex flex-col gap-1 pb-2 mb-2" style={{ borderBottom: '1px solid #444' }}>
+            <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 7, color: '#888', marginBottom: 2, letterSpacing: 1 }}>
+              PROJECT
+            </div>
+            <div className="flex flex-col gap-1 [&>*]:w-full">
+              {projectManagerSlot}
+              {demoPickerSlot}
+              {importSlot}
+            </div>
           </div>
           <button onClick={() => { onUndo(); setMenuOpen(false); }} className="mc-btn-sm w-full text-left">UNDO</button>
           <button onClick={() => { onRedo(); setMenuOpen(false); }} className="mc-btn-sm w-full text-left">REDO</button>
