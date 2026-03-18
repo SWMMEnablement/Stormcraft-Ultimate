@@ -32,6 +32,7 @@ Preferred communication style: Simple, everyday language.
 - `client/src/lib/greenville-model.json` — Parsed Greenville, SC SWMM model (172 nodes, 223 links, 30 subcatchments)
 - `client/src/lib/api.ts` — Typed fetch wrappers for the REST API
 - `client/src/lib/sound.ts` — Web Audio synthesized sound effects
+- `client/src/components/SWMM/SnapshotPanel.tsx` — Snapshot save/restore/compare panel with diff stats, engineering metrics, and localStorage persistence
 
 ### Backend (Express + Node.js)
 - **Runtime**: Node.js with Express, written in TypeScript and run via `tsx`

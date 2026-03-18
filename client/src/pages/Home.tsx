@@ -18,6 +18,7 @@ import { BudgetConfig, DEFAULT_BUDGET, SANDBOX_BUDGET, canAfford } from '@/lib/b
 import { ChallengeLevel } from '@/lib/challenges';
 import { downloadInpFile, generateInpFile } from '@/lib/swmm-export';
 import { SimulationResults } from '@/components/SWMM/SimulationResults';
+import { SnapshotPanel, Snapshot } from '@/components/SWMM/SnapshotPanel';
 import { DemoOverlay } from '@/components/SWMM/DemoOverlay';
 import { DemoModelPicker } from '@/components/SWMM/DemoModelPicker';
 import { SwmmEngine, applySimStepToModel } from '@/lib/swmm-engine';
@@ -47,6 +48,13 @@ export default function Home() {
   const [simSpeed, setSimSpeed] = useState(1);
   const [simResults, setSimResults] = useState<{ inp: string; rpt: string } | null>(null);
   const [isRunningSwmm, setIsRunningSwmm] = useState(false);
+  const [showSnapshots, setShowSnapshots] = useState(false);
+  const [snapshots, setSnapshots] = useState<Snapshot[]>(() => {
+    try {
+      const stored = localStorage.getItem('swmmcraft_snapshots');
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
   const [showDemo, setShowDemo] = useState(() => {
     if (typeof window !== 'undefined') {
       return !sessionStorage.getItem('swmmcraft_demo_seen');
@@ -242,6 +250,40 @@ export default function Home() {
     }
   }, [model]);
 
+  const updateSnapshots = useCallback((next: Snapshot[]) => {
+    setSnapshots(next);
+    try { localStorage.setItem('swmmcraft_snapshots', JSON.stringify(next)); } catch {}
+  }, []);
+
+  const handleSaveSnapshot = useCallback((name: string) => {
+    const cleanModel: SWMMState = {
+      nodes: model.nodes.map(n => ({ ...n, depth: 0, isSurcharged: false })),
+      links: model.links.map(l => ({ ...l, flow: 0 })),
+      subcatchments: model.subcatchments.map(s => ({ ...s })),
+    };
+    const snap: Snapshot = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name,
+      timestamp: Date.now(),
+      model: cleanModel,
+    };
+    updateSnapshots([snap, ...snapshots]);
+    setSteve(s => ({ ...s, speech: `Snapshot "${name}" saved!` }));
+  }, [model, snapshots, updateSnapshots]);
+
+  const handleRestoreSnapshot = useCallback((snap: Snapshot) => {
+    setModel(JSON.parse(JSON.stringify(snap.model)));
+    setSimTime(0);
+    setIsPlaying(false);
+    engineRef.current = null;
+    setShowSnapshots(false);
+    setSteve(s => ({ ...s, speech: `Restored "${snap.name}" — let's keep building!` }));
+  }, []);
+
+  const handleDeleteSnapshot = useCallback((id: string) => {
+    updateSnapshots(snapshots.filter(s => s.id !== id));
+  }, [snapshots, updateSnapshots]);
+
   const toggleThemeHandler = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
@@ -265,6 +307,16 @@ export default function Home() {
           inpContent={simResults.inp}
           rptContent={simResults.rpt}
           onClose={() => setSimResults(null)}
+        />
+      )}
+      {showSnapshots && (
+        <SnapshotPanel
+          snapshots={snapshots}
+          currentModel={model}
+          onSave={handleSaveSnapshot}
+          onRestore={handleRestoreSnapshot}
+          onDelete={handleDeleteSnapshot}
+          onClose={() => setShowSnapshots(false)}
         />
       )}
       <Header 
@@ -363,6 +415,26 @@ export default function Home() {
                                       }}
                                     >
                                       {isRunningSwmm ? 'RUNNING ENGINE...' : 'RUN SWMM5 ENGINE'}
+                                    </button>
+                                    <button
+                                      onClick={() => setShowSnapshots(true)}
+                                      data-testid="button-open-snapshots"
+                                      title="Save and compare different design iterations"
+                                      className="w-full"
+                                      style={{
+                                        background: '#3a2a0a',
+                                        color: '#FFAA00',
+                                        border: '2px solid #CC8800',
+                                        padding: '6px 8px',
+                                        fontFamily: '"Press Start 2P", monospace',
+                                        fontSize: 8,
+                                        cursor: 'pointer',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 1,
+                                        imageRendering: 'pixelated',
+                                      }}
+                                    >
+                                      SNAPSHOTS ({snapshots.length})
                                     </button>
                                     <BudgetBar model={model} budget={budget} />
                                 </div>
