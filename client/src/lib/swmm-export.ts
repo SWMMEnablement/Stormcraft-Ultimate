@@ -54,7 +54,8 @@ export function generateInpFile(model: SWMMState, title: string = 'SWMMCRAFT Exp
     lines.push(';;Name           Elevation  MaxDepth   InitDepth  SurDepth   Aponded');
     lines.push(';;-------------- ---------- ---------- ---------- ---------- ----------');
     junctions.forEach(j => {
-      lines.push(`${j.id.padEnd(17)}${j.invertElev.toFixed(2).padEnd(11)}${j.maxDepth.toFixed(2).padEnd(11)}0${' '.repeat(10)}0${' '.repeat(10)}0`);
+      const maxDepth = (j.maxDepth && j.maxDepth > 0) ? j.maxDepth : 4.0;
+      lines.push(`${j.id.padEnd(17)}${j.invertElev.toFixed(2).padEnd(11)}${maxDepth.toFixed(2).padEnd(11)}0${' '.repeat(10)}0${' '.repeat(10)}0`);
     });
     lines.push('');
   }
@@ -87,7 +88,9 @@ export function generateInpFile(model: SWMMState, title: string = 'SWMMCRAFT Exp
     lines.push(';;Name           From Node        To Node          Length     Roughness  InOffset   OutOffset  InitFlow   MaxFlow');
     lines.push(';;-------------- ---------------- ---------------- ---------- ---------- ---------- ---------- ---------- ----------');
     conduits.forEach(c => {
-      lines.push(`${c.id.padEnd(17)}${c.fromNode.padEnd(17)}${c.toNode.padEnd(17)}${c.length.toFixed(2).padEnd(11)}${c.roughness.toFixed(4).padEnd(11)}0${' '.repeat(10)}0${' '.repeat(10)}0${' '.repeat(10)}0`);
+      const roughness = (c.roughness && c.roughness > 0) ? c.roughness : 0.013;
+      const length = (c.length && c.length > 0) ? c.length : 400;
+      lines.push(`${c.id.padEnd(17)}${c.fromNode.padEnd(17)}${c.toNode.padEnd(17)}${length.toFixed(2).padEnd(11)}${roughness.toFixed(4).padEnd(11)}0${' '.repeat(10)}0${' '.repeat(10)}0${' '.repeat(10)}0`);
     });
     lines.push('');
 

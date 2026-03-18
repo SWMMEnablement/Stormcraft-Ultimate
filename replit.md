@@ -36,6 +36,7 @@ Preferred communication style: Simple, everyday language.
 ### Backend (Express + Node.js)
 - **Runtime**: Node.js with Express, written in TypeScript and run via `tsx`
 - **API**: RESTful JSON API under `/api/projects` supporting full CRUD (GET, POST, PATCH, DELETE)
+- **SWMM5 Engine**: Real EPA SWMM 5.1.13 compiled from C source (binary at `server/swmm5`). The `/api/simulate` endpoint accepts `.inp` file content, runs the engine, and returns the raw `.rpt` report.
 - **Validation**: Zod schemas generated from Drizzle table definitions via `drizzle-zod`
 - **Dev Server**: Vite dev server middleware is injected into Express during development for HMR
 - **Production**: Client is built to `dist/public`, server is bundled with esbuild to `dist/index.cjs`
@@ -60,8 +61,15 @@ Preferred communication style: Simple, everyday language.
 | POST | `/api/projects` | Create new project |
 | PATCH | `/api/projects/:id` | Update project |
 | DELETE | `/api/projects/:id` | Delete project |
+| POST | `/api/simulate` | Run SWMM5 engine simulation, returns raw .inp and .rpt content |
 
 The model data (nodes, links, subcatchments) is stored as a single JSONB blob in the `modelData` column rather than normalized into separate tables. This simplifies the schema since the model is always loaded/saved as a whole.
+
+### SWMM5 Engine Integration
+- `server/swmm5` — Compiled EPA SWMM 5.1.13 binary (from USEPA/Stormwater-Management-Model GitHub repo)
+- `client/src/components/SWMM/SimulationResults.tsx` — Full-screen results viewer with 3 tabs: Analysis (parsed graphs/tables from RPT), Raw .RPT file, Raw .INP file
+- The RPT parser extracts: subcatchment runoff summary, node depth summary, link flow summary, outfall loading, flow routing continuity, errors, and warnings
+- Bar charts visualize peak runoff and max flow; tables show detailed node/link summaries
 
 ## External Dependencies
 

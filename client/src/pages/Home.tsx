@@ -16,7 +16,8 @@ import { INITIAL_STEVE, updateSteve, getEmotionEmoji, getEmotionLabel } from '@/
 import { TutorialState, INITIAL_TUTORIAL, TUTORIAL_STEPS, advanceTutorial } from '@/lib/tutorial';
 import { BudgetConfig, DEFAULT_BUDGET, SANDBOX_BUDGET, canAfford } from '@/lib/budget';
 import { ChallengeLevel } from '@/lib/challenges';
-import { downloadInpFile } from '@/lib/swmm-export';
+import { downloadInpFile, generateInpFile } from '@/lib/swmm-export';
+import { SimulationResults } from '@/components/SWMM/SimulationResults';
 import { DemoOverlay } from '@/components/SWMM/DemoOverlay';
 import { DemoModelPicker } from '@/components/SWMM/DemoModelPicker';
 import { SwmmEngine, applySimStepToModel } from '@/lib/swmm-engine';
@@ -44,6 +45,8 @@ export default function Home() {
   const [simTime, setSimTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [simSpeed, setSimSpeed] = useState(1);
+  const [simResults, setSimResults] = useState<{ inp: string; rpt: string } | null>(null);
+  const [isRunningSwmm, setIsRunningSwmm] = useState(false);
   const [showDemo, setShowDemo] = useState(() => {
     if (typeof window !== 'undefined') {
       return !sessionStorage.getItem('swmmcraft_demo_seen');
@@ -214,6 +217,31 @@ export default function Home() {
     downloadInpFile(model, 'swmmcraft_export.inp');
   }, [model]);
 
+  const handleRunSwmm5 = useCallback(async () => {
+    if (model.nodes.length === 0) {
+      setSteve(s => ({ ...s, speech: "Need some nodes first! Build a network, then run SWMM5." }));
+      return;
+    }
+    setIsRunningSwmm(true);
+    setSteve(s => ({ ...s, speech: "Running the real EPA SWMM5 engine... hang tight!" }));
+    try {
+      const inpContent = generateInpFile(model, 'SWMMCraft Simulation');
+      const resp = await fetch('/api/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inpContent }),
+      });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      setSimResults({ inp: data.inpContent, rpt: data.rptContent });
+      setSteve(s => ({ ...s, speech: "SWMM5 simulation complete! Check the results." }));
+    } catch (err) {
+      setSteve(s => ({ ...s, speech: "SWMM5 run failed: " + (err instanceof Error ? err.message : String(err)) }));
+    } finally {
+      setIsRunningSwmm(false);
+    }
+  }, [model]);
+
   const toggleThemeHandler = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
@@ -232,6 +260,13 @@ export default function Home() {
   return (
     <div className={`h-screen flex flex-col overflow-hidden ${theme === 'dark' ? 'dark' : ''}`}>
       {showDemo && <DemoOverlay onDismiss={handleDismissDemo} />}
+      {simResults && (
+        <SimulationResults
+          inpContent={simResults.inp}
+          rptContent={simResults.rpt}
+          onClose={() => setSimResults(null)}
+        />
+      )}
       <Header 
         onUndo={() => {}} 
         onRedo={() => {}} 
@@ -308,6 +343,27 @@ export default function Home() {
                                       onSpeedChange={setSimSpeed}
                                       simSpeed={simSpeed}
                                     />
+                                    <button
+                                      onClick={handleRunSwmm5}
+                                      disabled={isRunningSwmm || model.nodes.length === 0}
+                                      data-testid="button-run-swmm5"
+                                      title="Run your model through the real EPA SWMM5 hydraulic engine and view the full report"
+                                      className="w-full"
+                                      style={{
+                                        background: isRunningSwmm ? '#333' : '#1a3a5c',
+                                        color: isRunningSwmm ? '#888' : '#55CCFF',
+                                        border: '2px solid #4488CC',
+                                        padding: '6px 8px',
+                                        fontFamily: '"Press Start 2P", monospace',
+                                        fontSize: 8,
+                                        cursor: isRunningSwmm ? 'wait' : 'pointer',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 1,
+                                        imageRendering: 'pixelated',
+                                      }}
+                                    >
+                                      {isRunningSwmm ? 'RUNNING ENGINE...' : 'RUN SWMM5 ENGINE'}
+                                    </button>
                                     <BudgetBar model={model} budget={budget} />
                                 </div>
 
